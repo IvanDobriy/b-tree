@@ -131,4 +131,78 @@ public class OpenAddressHashTableTest {
         assertEquals(300, table.find("key1"));
         assertEquals(1, table.size());
     }
+
+    @Test
+    public void testKeysEmptyTable() {
+        IHashTable<String, Integer> table = new OpenAddressHashTable<>(new StringHasher(), 16, 3);
+        
+        var keys = table.keys();
+        
+        assertEquals(0, keys.size());
+    }
+
+    @Test
+    public void testKeysAfterInsert() {
+        IHashTable<String, Integer> table = new OpenAddressHashTable<>(new StringHasher(), 16, 3);
+        
+        table.insert("key1", 100);
+        table.insert("key2", 200);
+        table.insert("key3", 300);
+        
+        var keys = table.keys();
+        
+        assertEquals(3, keys.size());
+        // Check that all keys are present
+        boolean foundKey1 = false, foundKey2 = false, foundKey3 = false;
+        for (int i = 0; i < keys.size(); i++) {
+            String key = keys.get(i);
+            if ("key1".equals(key)) foundKey1 = true;
+            if ("key2".equals(key)) foundKey2 = true;
+            if ("key3".equals(key)) foundKey3 = true;
+        }
+        assertTrue(foundKey1, "key1 should be in keys");
+        assertTrue(foundKey2, "key2 should be in keys");
+        assertTrue(foundKey3, "key3 should be in keys");
+    }
+
+    @Test
+    public void testKeysAfterRemove() {
+        IHashTable<String, Integer> table = new OpenAddressHashTable<>(new StringHasher(), 16, 3);
+        
+        table.insert("key1", 100);
+        table.insert("key2", 200);
+        table.remove("key1");
+        
+        var keys = table.keys();
+        
+        assertEquals(1, keys.size());
+        assertEquals("key2", keys.get(0));
+    }
+
+    @Test
+    public void testKeysAfterRehash() {
+        // Create small table to trigger rehash
+        IHashTable<String, Integer> table = new OpenAddressHashTable<>(new StringHasher(), 8, 3);
+        
+        // Insert enough elements to trigger rehash
+        for (int i = 0; i < 10; i++) {
+            table.insert("key" + i, i);
+        }
+        
+        var keys = table.keys();
+        
+        assertEquals(10, keys.size());
+        // Verify all keys are present after rehash
+        for (int i = 0; i < 10; i++) {
+            final String expectedKey = "key" + i;
+            boolean found = false;
+            for (int j = 0; j < keys.size(); j++) {
+                if (expectedKey.equals(keys.get(j))) {
+                    found = true;
+                    break;
+                }
+            }
+            assertTrue(found, expectedKey + " should be in keys after rehash");
+        }
+    }
 }

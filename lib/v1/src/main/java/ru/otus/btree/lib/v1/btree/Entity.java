@@ -1,5 +1,6 @@
 package ru.otus.btree.lib.v1.btree;
 
+import ru.otus.btree.lib.api.array.IArray;
 import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.IEntity;
 import ru.otus.btree.lib.api.hash.IHashTable;
@@ -26,6 +27,11 @@ public class Entity implements IEntity {
         Objects.requireNonNull(element, "element must not be null");
         elements.remove(element.getName());
         elements.insert(element.getName(), element);
+    }
+
+    @Override
+    public IArray<Element> toArray() {
+        return null;
     }
 
     public int size() {

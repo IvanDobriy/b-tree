@@ -130,4 +130,16 @@ public class OpenAddressHashTable<K, V> implements IHashTable<K, V> {
     public int size() {
         return size;
     }
+
+    @Override
+    public IArray<K> keys() {
+        IArray<K> result = new SingleArray<>(0);
+        for (int i = 0; i < container.size(); i++) {
+            Entry entry = container.get(i);
+            if (entry != null && !isDeleted.get(i)) {
+                result.add(result.size(), entry.key);
+            }
+        }
+        return result;
+    }
 }
