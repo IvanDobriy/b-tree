@@ -11,5 +11,5 @@ rootProject.name = "b-tree"
 
 include("cli")
 include("domain")
-include("lib")
 include("data")
+include("lib:api")
