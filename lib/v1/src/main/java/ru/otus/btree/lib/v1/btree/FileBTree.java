@@ -1,10 +1,17 @@
-package ru.otus.btree.v1;
+package ru.otus.btree.lib.v1.btree;
 
+import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.IBTree;
 import ru.otus.btree.lib.api.btree.IEntity;
-import ru.otus.btree.lib.api.btree.Element;
+
+import java.util.Objects;
 
 public class FileBTree implements IBTree {
+    private final String entityName;
+
+    public FileBTree(String entityName) {
+        this.entityName = Objects.requireNonNull(entityName, "entityName must not be null");
+    }
 
     @Override
     public void insert(String keyName, IEntity entity) {
