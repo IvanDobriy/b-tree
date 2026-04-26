@@ -10,7 +10,6 @@ public class Element {
     public Element(String name, EType type, Object value) {
         Objects.requireNonNull(name);
         Objects.requireNonNull(type);
-        Objects.requireNonNull(value);
 
         this.name = name;
         this.value = value;
