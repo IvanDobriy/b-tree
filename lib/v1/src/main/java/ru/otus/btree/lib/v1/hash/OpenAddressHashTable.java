@@ -32,7 +32,7 @@ public class OpenAddressHashTable<K, V> implements IHashTable<K, V> {
         container = new SingleArray<>(size);
         isDeleted = new SingleArray<>(size);
         for (int i = 0; i < isDeleted.size(); i++) {
-            isDeleted.set( i, false);
+            isDeleted.set(i, false);
         }
         this.step = step;
         probing = 0;
@@ -53,7 +53,7 @@ public class OpenAddressHashTable<K, V> implements IHashTable<K, V> {
             IArray<Entry> oldContainer = container;
             isDeleted = new SingleArray<>(isDeleted.size() * 2);
             for (int i = 0; i < isDeleted.size(); i++) {
-                isDeleted.set( i, false);
+                isDeleted.set(i, false);
             }
             container = new SingleArray<>(oldContainer.size() * 2);
             Entry data;
@@ -77,7 +77,7 @@ public class OpenAddressHashTable<K, V> implements IHashTable<K, V> {
             }
             if (container.get(hash) == null) {
                 container.set(hash, new Entry(key, value));
-                isDeleted.set( i, false);
+                isDeleted.set(hash, false);
                 size++;
                 counter++;
                 rehash();
@@ -99,9 +99,9 @@ public class OpenAddressHashTable<K, V> implements IHashTable<K, V> {
             }
             if (result != null && result.key.equals(key)) {
                 if (index >= 0 && index != i) {
-                    container.set(index, result );
+                    container.set(index, result);
                     isDeleted.set(index, false);
-                    container.set(i,  null);
+                    container.set(i, null);
                     isDeleted.set(i, true);
                 }
                 return result.value;
