@@ -25,6 +25,7 @@ public class Entity implements IEntity {
     @Override
     public void set(Element element) {
         Objects.requireNonNull(element, "element must not be null");
+        elements.remove(element.getName());
         elements.insert(element.getName(), element);
     }
 
