@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 
 public class FileBTreeUtils {
 
-    public static byte[] serialize(Element element) {
+    public static byte[] serializeElement(Element element) {
         if (element == null) {
             return new byte[0];
         }
@@ -55,7 +55,7 @@ public class FileBTreeUtils {
         }
     }
 
-    public static Element deserialize(byte[] data) {
+    public static Element deserializeElement(byte[] data) {
         if (data == null || data.length == 0) {
             return null;
         }
