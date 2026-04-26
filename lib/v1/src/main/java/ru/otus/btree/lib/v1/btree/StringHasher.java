@@ -1,7 +1,8 @@
-package ru.otus.btree.lib.v1.hash;
+package ru.otus.btree.lib.v1.btree;
 
 import ru.otus.btree.lib.api.crc.ICrc16;
 import ru.otus.btree.lib.v1.crc.Crc16;
+import ru.otus.btree.lib.v1.hash.IHasher;
 
 import java.nio.charset.StandardCharsets;
 

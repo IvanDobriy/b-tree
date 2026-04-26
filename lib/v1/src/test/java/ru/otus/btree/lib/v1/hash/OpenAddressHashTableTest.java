@@ -3,6 +3,7 @@ package ru.otus.btree.lib.v1.hash;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.otus.btree.lib.api.hash.IHashTable;
+import ru.otus.btree.lib.v1.btree.StringHasher;
 
 import static org.junit.jupiter.api.Assertions.*;
 

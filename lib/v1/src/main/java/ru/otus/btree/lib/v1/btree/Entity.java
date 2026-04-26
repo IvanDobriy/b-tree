@@ -4,7 +4,6 @@ import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.IEntity;
 import ru.otus.btree.lib.api.hash.IHashTable;
 import ru.otus.btree.lib.v1.hash.OpenAddressHashTable;
-import ru.otus.btree.lib.v1.hash.StringHasher;
 
 import java.util.Objects;
 
