@@ -68,6 +68,7 @@ public class OpenAddressHashTable<K, V> implements IHashTable<K, V> {
 
     @Override
     public void insert(K key, V value) {
+        Objects.requireNonNull(key, "key must not be null");
         for (int i = 0; i < container.size(); i++) {
             int hash = getHash(key, i);
             probing++;
@@ -87,6 +88,7 @@ public class OpenAddressHashTable<K, V> implements IHashTable<K, V> {
 
     @Override
     public V find(K key) {
+        Objects.requireNonNull(key, "key must not be null");
         Entry result;
         int index = -1;
         for (int i = 0; i < container.size(); i++) {
@@ -110,6 +112,7 @@ public class OpenAddressHashTable<K, V> implements IHashTable<K, V> {
 
     @Override
     public void remove(K key) {
+        Objects.requireNonNull(key, "key must not be null");
         Entry result;
         for (int i = 0; i < container.size(); i++) {
             int hash = getHash(key, i);
