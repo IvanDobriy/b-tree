@@ -2,14 +2,23 @@ package ru.otus.btree.lib.v1.btree;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import ru.otus.btree.lib.api.btree.Element;
+import org.junit.jupiter.api.io.TempDir;
 import ru.otus.btree.lib.api.btree.EType;
+import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.IEntity;
+
+import java.io.File;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class FileBTreeUtilsTest {
+
+    @TempDir
+    Path tempDir;
 
     @Test
     public void testSerializeDeserializeStringElement() {
@@ -92,11 +101,11 @@ public class FileBTreeUtilsTest {
     @Test
     public void testRoundTripMultipleElements() {
         Element[] elements = {
-            new Element("key1", EType.STRING, "value1"),
-            new Element("key2", EType.INTEGER, 100),
-            new Element("key3", EType.STRING, null),
-            new Element("key4", EType.INTEGER, -999),
-            new Element("key5", EType.STRING, "special!@#$%^&*()")
+                new Element("key1", EType.STRING, "value1"),
+                new Element("key2", EType.INTEGER, 100),
+                new Element("key3", EType.STRING, null),
+                new Element("key4", EType.INTEGER, -999),
+                new Element("key5", EType.STRING, "special!@#$%^&*()")
         };
 
         for (Element original : elements) {
@@ -187,6 +196,93 @@ public class FileBTreeUtilsTest {
             Element elem = result.get("key" + i);
             assertNotNull(elem);
             assertEquals(i, elem.getValue());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeFileBTreeNode() throws Exception {
+        File tempFile = tempDir.resolve("btree-test.tmp").toFile();
+
+        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
+             FileChannel channel = raf.getChannel()) {
+
+            FileBTreeNode original = new FileBTreeNode(1L, 3, true, channel);
+            original.getKeys().add(original.getKeys().size(), new Element("key1", EType.STRING, "value1"));
+            original.getKeys().add(original.getKeys().size(), new Element("key2", EType.INTEGER, 42));
+            original.getChildren().add(original.getChildren().size(), 2L);
+            original.getChildren().add(original.getChildren().size(), 3L);
+
+            byte[] serialized = FileBTreeUtils.serializeFileBTreeNode(original);
+            FileBTreeNode deserialized = FileBTreeUtils.deserializeFileBTreeNode(serialized, channel);
+
+            assertNotNull(deserialized);
+            assertEquals(1L, deserialized.getPageId());
+            assertEquals(3, deserialized.getDegree());
+            assertTrue(deserialized.isLeaf());
+            assertEquals(2, deserialized.getKeys().size());
+            assertEquals(2, deserialized.getChildren().size());
+
+            Element key1 = deserialized.getKeys().get(0);
+            assertEquals("key1", key1.getName());
+            assertEquals("value1", key1.getValue());
+
+            Element key2 = deserialized.getKeys().get(1);
+            assertEquals("key2", key2.getName());
+            assertEquals(42, key2.getValue());
+
+            assertEquals(2L, deserialized.getChildren().get(0));
+            assertEquals(3L, deserialized.getChildren().get(1));
+        }
+    }
+
+    @Test
+    public void testSerializeNullFileBTreeNode() {
+        byte[] serialized = FileBTreeUtils.serializeFileBTreeNode(null);
+        assertEquals(0, serialized.length);
+    }
+
+    @Test
+    public void testDeserializeNullFileBTreeNodeData() throws Exception {
+        File tempFile = tempDir.resolve("btree-test-null.tmp").toFile();
+
+        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
+             FileChannel channel = raf.getChannel()) {
+
+            FileBTreeNode result = FileBTreeUtils.deserializeFileBTreeNode(null, channel);
+            assertNull(result);
+        }
+    }
+
+    @Test
+    public void testDeserializeEmptyFileBTreeNodeData() throws Exception {
+        File tempFile = tempDir.resolve("btree-test-empty.tmp").toFile();
+
+        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
+             FileChannel channel = raf.getChannel()) {
+
+            FileBTreeNode result = FileBTreeUtils.deserializeFileBTreeNode(new byte[0], channel);
+            assertNull(result);
+        }
+    }
+
+    @Test
+    public void testSerializeEmptyFileBTreeNode() throws Exception {
+        File tempFile = tempDir.resolve("btree-test-empty-node.tmp").toFile();
+
+        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
+             FileChannel channel = raf.getChannel()) {
+
+            FileBTreeNode original = new FileBTreeNode(1L, 3, false, channel);
+
+            byte[] serialized = FileBTreeUtils.serializeFileBTreeNode(original);
+            FileBTreeNode deserialized = FileBTreeUtils.deserializeFileBTreeNode(serialized, channel);
+
+            assertNotNull(deserialized);
+            assertEquals(1L, deserialized.getPageId());
+            assertEquals(3, deserialized.getDegree());
+            assertFalse(deserialized.isLeaf());
+            assertEquals(0, deserialized.getKeys().size());
+            assertEquals(0, deserialized.getChildren().size());
         }
     }
 }

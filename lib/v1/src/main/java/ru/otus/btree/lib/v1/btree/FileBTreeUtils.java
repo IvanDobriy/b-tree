@@ -8,6 +8,7 @@ import ru.otus.btree.lib.v1.array.SingleArray;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 
 public class FileBTreeUtils {
@@ -159,6 +160,85 @@ public class FileBTreeUtils {
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to deserialize Entity", e);
+        }
+    }
+
+    public static byte[] serializeFileBTreeNode(FileBTreeNode node) {
+        if (node == null) {
+            return new byte[0];
+        }
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             DataOutputStream dos = new DataOutputStream(baos)) {
+
+            // Write node metadata
+            dos.writeLong(node.getPageId());
+            dos.writeInt(node.getDegree());
+            dos.writeBoolean(node.isLeaf());
+
+            // Write keys
+            IArray<Element> keys = node.getKeys();
+            dos.writeInt(keys.size());
+            for (int i = 0; i < keys.size(); i++) {
+                Element key = keys.get(i);
+                byte[] keyData = serializeElement(key);
+                dos.writeInt(keyData.length);
+                dos.write(keyData);
+            }
+
+            // Write children
+            IArray<Long> children = node.getChildren();
+            dos.writeInt(children.size());
+            for (int i = 0; i < children.size(); i++) {
+                dos.writeLong(children.get(i));
+            }
+
+            dos.flush();
+            return baos.toByteArray();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to serialize FileBTreeNode", e);
+        }
+    }
+
+    public static FileBTreeNode deserializeFileBTreeNode(byte[] data, FileChannel fileChannel) {
+        if (data == null || data.length == 0) {
+            return null;
+        }
+
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
+             DataInputStream dis = new DataInputStream(bais)) {
+
+            // Read node metadata
+            long pageId = dis.readLong();
+            int degree = dis.readInt();
+            boolean isLeaf = dis.readBoolean();
+
+            FileBTreeNode node = new FileBTreeNode(pageId, degree, isLeaf, fileChannel);
+
+            // Read keys
+            int keyCount = dis.readInt();
+            for (int i = 0; i < keyCount; i++) {
+                int keyLength = dis.readInt();
+                byte[] keyData = new byte[keyLength];
+                dis.readFully(keyData);
+                Element key = deserializeElement(keyData);
+                if (key != null) {
+                    node.getKeys().add(node.getKeys().size(), key);
+                }
+            }
+
+            // Read children
+            int childCount = dis.readInt();
+            for (int i = 0; i < childCount; i++) {
+                long childPageId = dis.readLong();
+                node.getChildren().add(node.getChildren().size(), childPageId);
+            }
+
+            return node;
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to deserialize FileBTreeNode", e);
         }
     }
 }
