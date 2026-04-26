@@ -100,8 +100,6 @@ public class FileBTreeUtils {
             return new byte[0];
         }
 
-        // Entity doesn't provide direct access to all elements
-        // We need to use a workaround: store elements as array of serialized elements
         if (!(entity instanceof Entity)) {
             throw new IllegalArgumentException("Entity must be an instance of ru.otus.btree.lib.v1.btree.Entity");
         }
@@ -114,21 +112,17 @@ public class FileBTreeUtils {
             // Write number of elements
             dos.writeInt(concreteEntity.size());
 
-            // Since Entity uses IHashTable internally and doesn't expose all elements,
-            // we need to track elements during serialization
-            // For now, we'll use a simple approach: serialize elements one by one
-            // This requires Entity to provide access to all elements
+            // Serialize each element
+            IArray<Element> elements = concreteEntity.elements();
+            for (int i = 0; i < elements.size(); i++) {
+                Element element = elements.get(i);
+                byte[] elementData = serializeElement(element);
+                dos.writeInt(elementData.length);
+                dos.write(elementData);
+            }
 
-            // Note: Current Entity implementation doesn't support iteration.
-            // This is a limitation that requires either:
-            // 1. Adding iterator/getAllElements to Entity
-            // 2. Changing Entity to use IArray instead of IHashTable for storage
-            // 3. Tracking keys separately
-
-            // For now, we throw UnsupportedOperationException
-            // until Entity provides iteration capability
-            throw new UnsupportedOperationException("Entity serialization requires Entity to provide iteration over elements. " +
-                    "Consider adding getAllElements() method to Entity class.");
+            dos.flush();
+            return baos.toByteArray();
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to serialize Entity", e);

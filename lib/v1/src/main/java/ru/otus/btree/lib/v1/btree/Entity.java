@@ -4,6 +4,7 @@ import ru.otus.btree.lib.api.array.IArray;
 import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.IEntity;
 import ru.otus.btree.lib.api.hash.IHashTable;
+import ru.otus.btree.lib.v1.array.SingleArray;
 import ru.otus.btree.lib.v1.hash.OpenAddressHashTable;
 
 import java.util.Objects;
@@ -40,5 +41,17 @@ public class Entity implements IEntity {
 
     public boolean isEmpty() {
         return elements.size() == 0;
+    }
+
+    public IArray<Element> elements() {
+        IArray<String> keys = elements.keys();
+        IArray<Element> result = new SingleArray<>(0);
+        for (int i = 0; i < keys.size(); i++) {
+            Element element = elements.find(keys.get(i));
+            if (element != null) {
+                result.add(result.size(), element);
+            }
+        }
+        return result;
     }
 }

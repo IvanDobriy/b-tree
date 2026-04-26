@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.EType;
+import ru.otus.btree.lib.api.btree.IEntity;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -106,6 +107,86 @@ public class FileBTreeUtilsTest {
             assertEquals(original.getName(), deserialized.getName());
             assertEquals(original.getType(), deserialized.getType());
             assertEquals(original.getValue(), deserialized.getValue());
+        }
+    }
+
+    @Test
+    public void testSerializeDeserializeEntity() {
+        Entity original = new Entity();
+        original.set(new Element("key1", EType.STRING, "value1"));
+        original.set(new Element("key2", EType.INTEGER, 42));
+        original.set(new Element("key3", EType.STRING, null));
+
+        byte[] serialized = FileBTreeUtils.serializeEntity(original);
+        IEntity deserialized = FileBTreeUtils.deserializeEntity(serialized);
+
+        assertNotNull(deserialized);
+        assertTrue(deserialized instanceof Entity);
+
+        Entity result = (Entity) deserialized;
+        assertEquals(3, result.size());
+
+        Element elem1 = result.get("key1");
+        assertNotNull(elem1);
+        assertEquals("value1", elem1.getValue());
+
+        Element elem2 = result.get("key2");
+        assertNotNull(elem2);
+        assertEquals(42, elem2.getValue());
+
+        Element elem3 = result.get("key3");
+        assertNotNull(elem3);
+        assertNull(elem3.getValue());
+    }
+
+    @Test
+    public void testSerializeNullEntity() {
+        byte[] serialized = FileBTreeUtils.serializeEntity(null);
+        assertEquals(0, serialized.length);
+    }
+
+    @Test
+    public void testDeserializeNullEntityData() {
+        IEntity result = FileBTreeUtils.deserializeEntity(null);
+        assertNull(result);
+    }
+
+    @Test
+    public void testDeserializeEmptyEntityData() {
+        IEntity result = FileBTreeUtils.deserializeEntity(new byte[0]);
+        assertNull(result);
+    }
+
+    @Test
+    public void testSerializeEmptyEntity() {
+        Entity original = new Entity();
+
+        byte[] serialized = FileBTreeUtils.serializeEntity(original);
+        IEntity deserialized = FileBTreeUtils.deserializeEntity(serialized);
+
+        assertNotNull(deserialized);
+        assertTrue(deserialized instanceof Entity);
+        assertEquals(0, ((Entity) deserialized).size());
+    }
+
+    @Test
+    public void testSerializeEntityWithManyElements() {
+        Entity original = new Entity();
+        for (int i = 0; i < 50; i++) {
+            original.set(new Element("key" + i, EType.INTEGER, i));
+        }
+
+        byte[] serialized = FileBTreeUtils.serializeEntity(original);
+        IEntity deserialized = FileBTreeUtils.deserializeEntity(serialized);
+
+        assertNotNull(deserialized);
+        Entity result = (Entity) deserialized;
+        assertEquals(50, result.size());
+
+        for (int i = 0; i < 50; i++) {
+            Element elem = result.get("key" + i);
+            assertNotNull(elem);
+            assertEquals(i, elem.getValue());
         }
     }
 }
