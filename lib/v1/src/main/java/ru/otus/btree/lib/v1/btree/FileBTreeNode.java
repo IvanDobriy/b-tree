@@ -12,7 +12,7 @@ import java.util.Objects;
 public class FileBTreeNode {
     private static final int PAGE_SIZE = 4096; // Standard file system page size
 
-    private final long pageId;
+    private long pageId;
     private final int degree;
     private final IArray<Element> keys;
     private final IArray<Long> children;
@@ -46,7 +46,7 @@ public class FileBTreeNode {
         }
     }
 
-    public static void saveNode(FileBTreeNode node, long pageId, FileChannel fileChannel) {
+    public static void saveNode(FileBTreeNode node, FileChannel fileChannel) {
         Objects.requireNonNull(fileChannel, "fileChannel must not be null");
         Objects.requireNonNull(node, "node must not be null");
 
@@ -77,6 +77,14 @@ public class FileBTreeNode {
         this.parentPageId = -1; // No parent by default (root node)
     }
 
+    public long getPageId() {
+        return pageId;
+    }
+
+    public void setPageId(long pageId) {
+        this.pageId = pageId;
+    }
+
     public long getParentPageId() {
         return parentPageId;
     }
@@ -86,10 +94,6 @@ public class FileBTreeNode {
     }
 
 
-
-    public long getPageId() {
-        return pageId;
-    }
 
     public int getDegree() {
         return degree;
@@ -194,7 +198,7 @@ public class FileBTreeNode {
                 Long childPageId = children.get(childIndex);
                 FileBTreeNode childNode = loadNode(childPageId, fileChannel);
                 childNode.insertByKey(key);
-                saveNode(childNode, childPageId, fileChannel);
+                saveNode(childNode, fileChannel);
             } else {
                 // If no valid child, insert into current node
                 insertKeyIntoNode(key);
@@ -219,7 +223,7 @@ public class FileBTreeNode {
         return childIndex;
     }
 
-    private void insertKeyIntoNode(Element key) {
+    private int insertKeyIntoNode(Element key) {
         // Find the correct position by comparing from the end
         // Shift elements to the right to make room for the new key
         int insertIndex = keys.size();
@@ -243,6 +247,7 @@ public class FileBTreeNode {
         } else {
             keys.add(insertIndex, key);
         }
+        return insertIndex;
     }
 
     private void splitNode() {
@@ -283,7 +288,7 @@ public class FileBTreeNode {
         }
 
         // Save the right sibling
-        saveNode(rightSibling, newPageId, fileChannel);
+        saveNode(rightSibling, fileChannel);
 
         // Add right sibling as a child
         children.add(children.size(), newPageId);
@@ -292,7 +297,7 @@ public class FileBTreeNode {
         promoteToParent(medianKey, newPageId);
 
         // Save this node
-        saveNode(this, pageId, fileChannel);
+        saveNode(this, fileChannel);
     }
 
     private void promoteToParent(Element medianKey, long rightSiblingPageId) {
@@ -301,44 +306,42 @@ public class FileBTreeNode {
             long newRootPageId = 0; // Root is always at page 0
             FileBTreeNode newRoot = new FileBTreeNode(newRootPageId, degree, false, fileChannel);
             newRoot.getKeys().add(0, medianKey);
-            newRoot.getChildren().add(0, this.pageId);
+
+            // Current node needs a new pageId since root now occupies page 0
+            long newPageId = pageId == 0 ? PAGE_SIZE : pageId;
+            newRoot.getChildren().add(0, newPageId);
             newRoot.getChildren().add(1, rightSiblingPageId);
 
-            // Update parent references
+            // Update parent references and pageId
             this.parentPageId = newRootPageId;
-            saveNode(this, pageId, fileChannel);
+            this.pageId = newPageId;
+            saveNode(this, fileChannel);
 
             // Save right sibling with updated parent
             FileBTreeNode rightSibling = loadNode(rightSiblingPageId, fileChannel);
             rightSibling.setParentPageId(newRootPageId);
-            saveNode(rightSibling, rightSiblingPageId, fileChannel);
+            saveNode(rightSibling, fileChannel);
 
             // Save the new root
-            saveNode(newRoot, newRootPageId, fileChannel);
+            saveNode(newRoot, fileChannel);
         } else {
             // Load parent and insert median key
             FileBTreeNode parent = loadNode(parentPageId, fileChannel);
 
             // Insert median key into parent using insertKeyIntoNode
-            parent.insertKeyIntoNode(medianKey);
+            int keyInsertIndex = parent.insertKeyIntoNode(medianKey);
 
-            // Find the index where medianKey was inserted to add child at correct position
-            int childInsertIndex = 0;
-            for (int i = 0; i < parent.getKeys().size(); i++) {
-                if (compareElements(medianKey, parent.getKeys().get(i)) == 0) {
-                    childInsertIndex = i + 1;
-                    break;
-                }
-            }
+            // Add right sibling as child after the inserted key
+            int childInsertIndex = keyInsertIndex + 1;
             parent.getChildren().add(childInsertIndex, rightSiblingPageId);
 
             // Update parent reference of right sibling
             FileBTreeNode rightSibling = loadNode(rightSiblingPageId, fileChannel);
             rightSibling.setParentPageId(parentPageId);
-            saveNode(rightSibling, rightSiblingPageId, fileChannel);
+            saveNode(rightSibling, fileChannel);
 
             // Save parent
-            saveNode(parent, parentPageId, fileChannel);
+            saveNode(parent, fileChannel);
 
             // Recursively split parent if needed
             if (parent.getKeys().size() > degree - 1) {
