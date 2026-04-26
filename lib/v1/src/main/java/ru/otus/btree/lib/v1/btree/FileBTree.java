@@ -4,12 +4,15 @@ import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.IBTree;
 import ru.otus.btree.lib.api.btree.IEntity;
 
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import java.util.Objects;
 
 public class FileBTree implements IBTree {
-    private final String entityName;
+    private final Path entityName;
+    private FileChannel fileChannel;
 
-    public FileBTree(String entityName) {
+    public FileBTree(Path entityName) {
         this.entityName = Objects.requireNonNull(entityName, "entityName must not be null");
     }
 
@@ -28,4 +31,5 @@ public class FileBTree implements IBTree {
     public void delete(Element element) {
         // TODO: Implement delete
     }
+
 }
