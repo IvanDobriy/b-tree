@@ -3,7 +3,7 @@ package ru.otus.btree.lib.v1.crc;
 
 import ru.otus.btree.lib.api.crc.ICrc16;
 
-class Crc16 implements ICrc16 {
+public class Crc16 implements ICrc16 {
     private final int initial;
     private final int mask;
 

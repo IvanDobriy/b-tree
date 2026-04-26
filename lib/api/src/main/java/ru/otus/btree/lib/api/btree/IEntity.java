@@ -1,7 +1,7 @@
 package ru.otus.btree.lib.api.btree;
 
 public interface IEntity {
-    Element get(int name);
+    Element get(String name);
 
     void set(Element element);
 }
