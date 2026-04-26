@@ -98,4 +98,46 @@ public class FileBTreeNode {
     public IArray<Long> getChildren() {
         return children;
     }
+
+    public Element findByKey(Element key) {
+        if (key == null) {
+            return null;
+        }
+
+        String keyName = key.getName();
+
+        // Search in current node's keys
+        for (int i = 0; i < keys.size(); i++) {
+            Element currentKey = keys.get(i);
+            if (currentKey != null && currentKey.getName().equals(keyName)) {
+                return currentKey;
+            }
+        }
+
+        // If this is a leaf, key not found
+        if (isLeaf) {
+            return null;
+        }
+
+        // Determine which child to go to based on key comparison
+        int childIndex = 0;
+        for (int i = 0; i < keys.size(); i++) {
+            Element currentKey = keys.get(i);
+            if (currentKey != null && keyName.compareTo(currentKey.getName()) < 0) {
+                childIndex = i;
+                break;
+            }
+            childIndex = i + 1;
+        }
+
+        // Check if we have a valid child to go to
+        if (childIndex >= children.size()) {
+            return null;
+        }
+
+        // Load the child node and search recursively
+        Long childPageId = children.get(childIndex);
+        FileBTreeNode childNode = loadNode(childPageId, fileChannel);
+        return childNode.findByKey(key);
+    }
 }
