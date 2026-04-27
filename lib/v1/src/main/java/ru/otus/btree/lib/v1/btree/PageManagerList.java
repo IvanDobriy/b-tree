@@ -226,8 +226,7 @@ public class PageManagerList {
                 buffer.put(recordData, 0, PageManagerEntity.RECORD_SIZE);
 
                 buffer.flip();
-                fileChannel.position((long) pageIndex * PAGE_SIZE);
-                fileChannel.write(buffer);
+                writePage(fileChannel, pageIndex, buffer);
             } else {
                 // Record spans across two pages
                 int bytesInFirstPage = PAGE_SIZE - positionInPage;
@@ -242,16 +241,14 @@ public class PageManagerList {
                 buffer1.put(recordData, 0, bytesInFirstPage);
 
                 buffer1.flip();
-                fileChannel.position((long) pageIndex * PAGE_SIZE);
-                fileChannel.write(buffer1);
+                writePage(fileChannel, pageIndex, buffer1);
 
                 // Read and update second page
                 ByteBuffer buffer2 = readPage(fileChannel, pageIndex + 1);
                 buffer2.put(recordData, bytesInFirstPage, bytesInSecondPage);
 
                 buffer2.flip();
-                fileChannel.position((long) (pageIndex + 1) * PAGE_SIZE);
-                fileChannel.write(buffer2);
+                writePage(fileChannel, pageIndex + 1, buffer2);
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to save page record", e);
@@ -299,6 +296,22 @@ public class PageManagerList {
 
         buffer.flip();
         return buffer;
+    }
+
+    /**
+     * Writes a ByteBuffer to the specified page in the file channel.
+     *
+     * @param fileChannel the file channel to write to
+     * @param pageIndex the index of the page to write
+     * @param buffer the buffer containing data to write
+     * @throws IOException if an I/O error occurs
+     */
+    private void writePage(FileChannel fileChannel, int pageIndex, ByteBuffer buffer) throws IOException {
+        Objects.requireNonNull(fileChannel, "fileChannel must not be null");
+        Objects.requireNonNull(buffer, "buffer must not be null");
+
+        fileChannel.position((long) pageIndex * PAGE_SIZE);
+        fileChannel.write(buffer);
     }
 
     /**
