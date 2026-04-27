@@ -111,7 +111,7 @@ public class FileBTreeNodeTest {
             original.getChildren().add(original.getChildren().size(), 1L);
             original.getChildren().add(original.getChildren().size(), 2L);
 
-            FileBTreeNode.saveNode(original, 0L, channel);
+            FileBTreeNode.saveNode(original, channel);
 
             // Load node
             FileBTreeNode loaded = FileBTreeNode.loadNode(0L, channel);
@@ -149,7 +149,7 @@ public class FileBTreeNodeTest {
             FileBTreeNode node = new FileBTreeNode(0L, 3, true, channel);
 
             assertThrows(NullPointerException.class, () -> {
-                FileBTreeNode.saveNode(node, 0L, null);
+                FileBTreeNode.saveNode(node, null);
             });
         }
     }
@@ -161,7 +161,7 @@ public class FileBTreeNodeTest {
              FileChannel channel = raf.getChannel()) {
 
             assertThrows(NullPointerException.class, () -> {
-                FileBTreeNode.saveNode(null, 0L, channel);
+                FileBTreeNode.saveNode(null, channel);
             });
         }
     }
@@ -173,7 +173,7 @@ public class FileBTreeNodeTest {
              FileChannel channel = raf.getChannel()) {
 
             FileBTreeNode original = new FileBTreeNode(0L, 3, false, channel);
-            FileBTreeNode.saveNode(original, 0L, channel);
+            FileBTreeNode.saveNode(original, channel);
 
             FileBTreeNode loaded = FileBTreeNode.loadNode(0L, channel);
 
