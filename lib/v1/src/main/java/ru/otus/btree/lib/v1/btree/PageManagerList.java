@@ -20,7 +20,7 @@ public class PageManagerList {
 
     public PageManagerList(FileChannel fileChannel) {
         this.fileChannel = Objects.requireNonNull(fileChannel, "fileChannel must not be null");
-        this.header = loadHeader(fileChannel);
+        this.header = loadHeader();
     }
 
     public PageManagerHeader getHeader() {
@@ -57,7 +57,7 @@ public class PageManagerList {
      * @return the PageManagerEntity, or null if not found
      */
     public PageManagerEntity getEntity(int pageIndex) {
-        return loadPageRecord(fileChannel, pageIndex);
+        return loadPageRecord(pageIndex);
     }
 
     /**
@@ -65,12 +65,9 @@ public class PageManagerList {
      * Reads and deserializes the first page (PAGE_SIZE).
      * If file is empty, creates a new header with size = 0, saves it and returns.
      *
-     * @param fileChannel the file channel to read from
      * @return the loaded or newly created PageManagerHeader
      */
-    private PageManagerHeader loadHeader(FileChannel fileChannel) {
-        Objects.requireNonNull(fileChannel, "fileChannel must not be null");
-
+    private PageManagerHeader loadHeader() {
         try {
             // Check if file is empty
             if (fileChannel.size() == 0) {
@@ -91,7 +88,7 @@ public class PageManagerList {
             }
 
             // Read header from first page
-            ByteBuffer buffer = readPage(fileChannel, 0);
+            ByteBuffer buffer = readPage(0);
             int bytesRead = buffer.remaining();
 
             if (bytesRead <= 0) {
@@ -123,14 +120,11 @@ public class PageManagerList {
      * Data is read block by block. If the record spans across page boundaries,
      * the next block is loaded to complete the record.
      *
-     * @param fileChannel the file channel to read from
      * @param recordIndex the index of the record to load
      * @return the loaded PageManagerEntity, or null if record doesn't exist
      * @throws IOException if an I/O error occurs
      */
-    private PageManagerEntity loadPageRecord(FileChannel fileChannel, int recordIndex) {
-        Objects.requireNonNull(fileChannel, "fileChannel must not be null");
-
+    private PageManagerEntity loadPageRecord(int recordIndex) {
         try {
             long offset = calculateOffset(recordIndex);
             long fileSize = fileChannel.size();
@@ -145,7 +139,7 @@ public class PageManagerList {
 
             if (positionInPage + PageManagerEntity.RECORD_SIZE <= PAGE_SIZE) {
                 // Record fits entirely within one page
-                ByteBuffer buffer = readPage(fileChannel, pageIndex);
+                ByteBuffer buffer = readPage(pageIndex);
                 if (buffer.remaining() < positionInPage + PageManagerEntity.RECORD_SIZE) {
                     throw new IOException("Incomplete data read from page " + pageIndex);
                 }
@@ -157,7 +151,7 @@ public class PageManagerList {
                 int bytesFromSecondPage = PageManagerEntity.RECORD_SIZE - bytesFromFirstPage;
 
                 // Read first page
-                ByteBuffer buffer1 = readPage(fileChannel, pageIndex);
+                ByteBuffer buffer1 = readPage(pageIndex);
                 if (buffer1.remaining() < bytesFromFirstPage) {
                     throw new IOException("Incomplete data in first page " + pageIndex);
                 }
@@ -165,7 +159,7 @@ public class PageManagerList {
                 buffer1.get(recordData, 0, bytesFromFirstPage);
 
                 // Read second page
-                ByteBuffer buffer2 = readPage(fileChannel, pageIndex + 1);
+                ByteBuffer buffer2 = readPage(pageIndex + 1);
                 if (buffer2.remaining() < bytesFromSecondPage) {
                     throw new IOException("Incomplete data in second page " + (pageIndex + 1));
                 }
@@ -193,12 +187,10 @@ public class PageManagerList {
      * Data is written block by block. If the record spans across page boundaries,
      * both pages are written to complete the record.
      *
-     * @param fileChannel the file channel to write to
      * @param recordIndex the index of the record to save
-     * @param entity the entity to save
+     * @param entity      the entity to save
      */
-    private void savePageRecord(FileChannel fileChannel, int recordIndex, PageManagerEntity entity) {
-        Objects.requireNonNull(fileChannel, "fileChannel must not be null");
+    private void savePageRecord(int recordIndex, PageManagerEntity entity) {
         Objects.requireNonNull(entity, "entity must not be null");
 
         try {
@@ -214,11 +206,11 @@ public class PageManagerList {
                 // Record spans to next page
                 requiredSize = (long) (pageIndex + 2) * PAGE_SIZE;
             }
-            ensureFileSize(fileChannel, requiredSize);
+            ensureFileSize(requiredSize);
 
             if (positionInPage + PageManagerEntity.RECORD_SIZE <= PAGE_SIZE) {
                 // Record fits entirely within one page
-                ByteBuffer buffer = readPage(fileChannel, pageIndex);
+                ByteBuffer buffer = readPage(pageIndex);
                 if (buffer.remaining() < positionInPage) {
                     throw new IOException("Incomplete page data at page " + pageIndex);
                 }
@@ -226,14 +218,14 @@ public class PageManagerList {
                 buffer.put(recordData, 0, PageManagerEntity.RECORD_SIZE);
 
                 buffer.flip();
-                writePage(fileChannel, pageIndex, buffer);
+                writePage(pageIndex, buffer);
             } else {
                 // Record spans across two pages
                 int bytesInFirstPage = PAGE_SIZE - positionInPage;
                 int bytesInSecondPage = PageManagerEntity.RECORD_SIZE - bytesInFirstPage;
 
                 // Read and update first page
-                ByteBuffer buffer1 = readPage(fileChannel, pageIndex);
+                ByteBuffer buffer1 = readPage(pageIndex);
                 if (buffer1.remaining() < positionInPage) {
                     throw new IOException("Incomplete page data at page " + pageIndex);
                 }
@@ -241,14 +233,14 @@ public class PageManagerList {
                 buffer1.put(recordData, 0, bytesInFirstPage);
 
                 buffer1.flip();
-                writePage(fileChannel, pageIndex, buffer1);
+                writePage(pageIndex, buffer1);
 
                 // Read and update second page
-                ByteBuffer buffer2 = readPage(fileChannel, pageIndex + 1);
+                ByteBuffer buffer2 = readPage(pageIndex + 1);
                 buffer2.put(recordData, bytesInFirstPage, bytesInSecondPage);
 
                 buffer2.flip();
-                writePage(fileChannel, pageIndex + 1, buffer2);
+                writePage(pageIndex + 1, buffer2);
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to save page record", e);
@@ -258,11 +250,10 @@ public class PageManagerList {
     /**
      * Ensures the file is at least the specified size by extending it if necessary.
      *
-     * @param fileChannel the file channel
      * @param requiredSize the minimum required file size
      * @throws IOException if an I/O error occurs
      */
-    private void ensureFileSize(FileChannel fileChannel, long requiredSize) throws IOException {
+    private void ensureFileSize(long requiredSize) throws IOException {
         long currentSize = fileChannel.size();
         if (currentSize < requiredSize) {
             fileChannel.position(currentSize);
@@ -278,14 +269,11 @@ public class PageManagerList {
      * Reads a single page into a ByteBuffer from the file channel.
      * The buffer is allocated with PAGE_SIZE and filled with data from the file.
      *
-     * @param fileChannel the file channel to read from
      * @param pageIndex the index of the page to read
      * @return ByteBuffer containing the page data
      * @throws IOException if an I/O error occurs
      */
-    private ByteBuffer readPage(FileChannel fileChannel, int pageIndex) throws IOException {
-        Objects.requireNonNull(fileChannel, "fileChannel must not be null");
-
+    private ByteBuffer readPage(int pageIndex) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(PAGE_SIZE);
         fileChannel.position((long) pageIndex * PAGE_SIZE);
         int bytesRead = fileChannel.read(buffer);
@@ -301,13 +289,11 @@ public class PageManagerList {
     /**
      * Writes a ByteBuffer to the specified page in the file channel.
      *
-     * @param fileChannel the file channel to write to
      * @param pageIndex the index of the page to write
-     * @param buffer the buffer containing data to write
+     * @param buffer    the buffer containing data to write
      * @throws IOException if an I/O error occurs
      */
-    private void writePage(FileChannel fileChannel, int pageIndex, ByteBuffer buffer) throws IOException {
-        Objects.requireNonNull(fileChannel, "fileChannel must not be null");
+    private void writePage(int pageIndex, ByteBuffer buffer) throws IOException {
         Objects.requireNonNull(buffer, "buffer must not be null");
 
         fileChannel.position((long) pageIndex * PAGE_SIZE);
@@ -318,11 +304,8 @@ public class PageManagerList {
      * Saves the header to the file channel.
      * Serializes the header and writes it to the first page.
      *
-     * @param fileChannel the file channel to write to
      */
-    private void saveHeader(FileChannel fileChannel) {
-        Objects.requireNonNull(fileChannel, "fileChannel must not be null");
-
+    private void saveHeader() {
         try {
             byte[] headerData = PageManagerHeader.serialize(header);
             ByteBuffer buffer = ByteBuffer.allocate(PAGE_SIZE);
