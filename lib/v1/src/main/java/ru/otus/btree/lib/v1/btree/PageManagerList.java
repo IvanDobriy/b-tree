@@ -1,8 +1,5 @@
 package ru.otus.btree.lib.v1.btree;
 
-import ru.otus.btree.lib.api.array.IArray;
-import ru.otus.btree.lib.v1.array.SingleArray;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -303,7 +300,6 @@ public class PageManagerList {
     /**
      * Saves the header to the file channel.
      * Serializes the header and writes it to the first page.
-     *
      */
     private void saveHeader() {
         try {
