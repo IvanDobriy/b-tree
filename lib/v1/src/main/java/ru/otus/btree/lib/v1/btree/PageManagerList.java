@@ -218,13 +218,7 @@ public class PageManagerList {
 
             if (positionInPage + PageManagerEntity.RECORD_SIZE <= PAGE_SIZE) {
                 // Record fits entirely within one page
-                ByteBuffer buffer = ByteBuffer.allocate(PAGE_SIZE);
-                fileChannel.position((long) pageIndex * PAGE_SIZE);
-                int read = fileChannel.read(buffer);
-                if (read < 0) {
-                    read = 0;
-                }
-                buffer.flip();
+                ByteBuffer buffer = readPage(fileChannel, pageIndex);
                 if (buffer.remaining() < positionInPage) {
                     buffer.position(buffer.remaining());
                     while (buffer.position() < positionInPage) {
@@ -244,13 +238,7 @@ public class PageManagerList {
                 int bytesInSecondPage = PageManagerEntity.RECORD_SIZE - bytesInFirstPage;
 
                 // Read and update first page
-                ByteBuffer buffer1 = ByteBuffer.allocate(PAGE_SIZE);
-                fileChannel.position((long) pageIndex * PAGE_SIZE);
-                int read1 = fileChannel.read(buffer1);
-                if (read1 < 0) {
-                    read1 = 0;
-                }
-                buffer1.flip();
+                ByteBuffer buffer1 = readPage(fileChannel, pageIndex);
                 if (buffer1.remaining() < positionInPage) {
                     buffer1.position(buffer1.remaining());
                     while (buffer1.position() < positionInPage) {
@@ -266,13 +254,7 @@ public class PageManagerList {
                 fileChannel.write(buffer1);
 
                 // Read and update second page
-                ByteBuffer buffer2 = ByteBuffer.allocate(PAGE_SIZE);
-                fileChannel.position((long) (pageIndex + 1) * PAGE_SIZE);
-                int read2 = fileChannel.read(buffer2);
-                if (read2 < 0) {
-                    read2 = 0;
-                }
-                buffer2.flip();
+                ByteBuffer buffer2 = readPage(fileChannel, pageIndex + 1);
                 buffer2.put(recordData, bytesInFirstPage, bytesInSecondPage);
 
                 buffer2.flip();
