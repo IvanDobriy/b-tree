@@ -65,7 +65,7 @@ public class PageManagerList {
      */
     public void setEntity(PageManagerEntity entity) {
         Objects.requireNonNull(entity, "entity must not be null");
-        savePageRecord((int) entity.getId(), entity);
+        savePageRecord(entity);
     }
 
     /**
@@ -191,19 +191,19 @@ public class PageManagerList {
     }
 
     /**
-     * Saves a page record to the file channel by index.
+     * Saves a page record to the file channel.
+     * Uses entity.getId() as the record index.
      * Data is written block by block. If the record spans across page boundaries,
      * both pages are written to complete the record.
      *
-     * @param recordIndex the index of the record to save
-     * @param entity      the entity to save
+     * @param entity the entity to save
      */
-    private void savePageRecord(int recordIndex, PageManagerEntity entity) {
+    private void savePageRecord(PageManagerEntity entity) {
         Objects.requireNonNull(entity, "entity must not be null");
 
         try {
             byte[] recordData = PageManagerEntity.serialize(entity);
-            long offset = calculateOffset(recordIndex);
+            long offset = calculateOffset((int) entity.getId());
 
             int pageIndex = (int) (offset / PAGE_SIZE);
             int positionInPage = (int) (offset % PAGE_SIZE);
