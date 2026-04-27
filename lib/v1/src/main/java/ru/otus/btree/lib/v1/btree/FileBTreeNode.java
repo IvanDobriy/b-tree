@@ -1,6 +1,7 @@
 package ru.otus.btree.lib.v1.btree;
 
 import ru.otus.btree.lib.api.array.IArray;
+import ru.otus.btree.lib.api.btree.EType;
 import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.v1.array.SingleArray;
 
@@ -19,6 +20,7 @@ public class FileBTreeNode {
     private boolean isLeaf;
     private FileChannel fileChannel;
     private long parentPageId; // -1 means no parent (root node)
+    private PageManager pageManager; // Page allocation manager
 
 
     public static FileBTreeNode loadNode(long pageId, FileChannel fileChannel) {
@@ -75,6 +77,25 @@ public class FileBTreeNode {
         this.keys = new SingleArray<>(0);
         this.children = new SingleArray<>(0);
         this.parentPageId = -1; // No parent by default (root node)
+    }
+
+    public FileBTreeNode(long pageId, int degree, boolean isLeaf, FileChannel fileChannel, PageManager pageManager) {
+        this.fileChannel = Objects.requireNonNull(fileChannel, "fileChannel must not be null");
+        this.pageManager = Objects.requireNonNull(pageManager, "pageManager must not be null");
+        this.pageId = pageId;
+        this.degree = degree;
+        this.isLeaf = isLeaf;
+        this.keys = new SingleArray<>(0);
+        this.children = new SingleArray<>(0);
+        this.parentPageId = -1; // No parent by default (root node)
+    }
+
+    public void setPageManager(PageManager pageManager) {
+        this.pageManager = pageManager;
+    }
+
+    public PageManager getPageManager() {
+        return pageManager;
     }
 
     public long getPageId() {
@@ -260,9 +281,9 @@ public class FileBTreeNode {
         int medianIndex = keys.size() / 2;
         Element medianKey = keys.get(medianIndex);
 
-        // Create new right sibling node
-        long newPageId = pageId + PAGE_SIZE;
-        FileBTreeNode rightSibling = new FileBTreeNode(newPageId, degree, isLeaf, fileChannel);
+        // Create new right sibling node using PageManager to allocate page
+        long newPageId = pageManager.allocatePage();
+        FileBTreeNode rightSibling = new FileBTreeNode(newPageId, degree, isLeaf, fileChannel, pageManager);
         rightSibling.setParentPageId(parentPageId);
 
         // Move keys after median to right sibling
@@ -304,11 +325,11 @@ public class FileBTreeNode {
         if (parentPageId == -1) {
             // This is the root node, create a new root
             long newRootPageId = 0; // Root is always at page 0
-            FileBTreeNode newRoot = new FileBTreeNode(newRootPageId, degree, false, fileChannel);
+            FileBTreeNode newRoot = new FileBTreeNode(newRootPageId, degree, false, fileChannel, pageManager);
             newRoot.getKeys().add(0, medianKey);
 
             // Current node needs a new pageId since root now occupies page 0
-            long newPageId = pageId == 0 ? PAGE_SIZE : pageId;
+            long newPageId = pageManager.allocatePage();
             newRoot.getChildren().add(0, newPageId);
             newRoot.getChildren().add(1, rightSiblingPageId);
 
