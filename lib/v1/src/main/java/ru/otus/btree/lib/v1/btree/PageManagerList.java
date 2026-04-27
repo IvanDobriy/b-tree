@@ -87,7 +87,7 @@ public class PageManagerList {
                 byte[] headerData = PageManagerHeader.serialize(newHeader);
                 ByteBuffer buffer = ByteBuffer.allocate(PAGE_SIZE);
                 buffer.put(headerData);
-                buffer.flip();
+                buffer.clear();
 
                 fileChannel.position(0);
                 fileChannel.write(buffer);
