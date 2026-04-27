@@ -5,6 +5,9 @@ package ru.otus.btree.lib.v1.btree;
  * Used for serialization and deserialization of page allocation information.
  */
 public class PageManagerEntity {
+    // Size of serialized record: long (8) + int (4) + boolean (1) = 13 bytes
+    public static final int RECORD_SIZE = 13;
+
     private long id;
     private int size;
     private boolean used;
