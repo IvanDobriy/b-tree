@@ -58,6 +58,17 @@ public class PageManagerList {
     }
 
     /**
+     * Saves a page entity to the file.
+     * Uses entity.getId() as the record index and savePageRecord to persist the entity.
+     *
+     * @param entity the entity to save
+     */
+    public void setEntity(PageManagerEntity entity) {
+        Objects.requireNonNull(entity, "entity must not be null");
+        savePageRecord((int) entity.getId(), entity);
+    }
+
+    /**
      * Loads header from the file channel.
      * Reads and deserializes the first page (PAGE_SIZE).
      * If file is empty, creates a new header with size = 0, saves it and returns.
