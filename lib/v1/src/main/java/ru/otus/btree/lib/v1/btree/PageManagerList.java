@@ -220,13 +220,9 @@ public class PageManagerList {
                 // Record fits entirely within one page
                 ByteBuffer buffer = readPage(fileChannel, pageIndex);
                 if (buffer.remaining() < positionInPage) {
-                    buffer.position(buffer.remaining());
-                    while (buffer.position() < positionInPage) {
-                        buffer.put((byte) 0);
-                    }
-                } else {
-                    buffer.position(positionInPage);
+                    throw new IOException("Incomplete page data at page " + pageIndex);
                 }
+                buffer.position(positionInPage);
                 buffer.put(recordData, 0, PageManagerEntity.RECORD_SIZE);
 
                 buffer.flip();
@@ -240,13 +236,9 @@ public class PageManagerList {
                 // Read and update first page
                 ByteBuffer buffer1 = readPage(fileChannel, pageIndex);
                 if (buffer1.remaining() < positionInPage) {
-                    buffer1.position(buffer1.remaining());
-                    while (buffer1.position() < positionInPage) {
-                        buffer1.put((byte) 0);
-                    }
-                } else {
-                    buffer1.position(positionInPage);
+                    throw new IOException("Incomplete page data at page " + pageIndex);
                 }
+                buffer1.position(positionInPage);
                 buffer1.put(recordData, 0, bytesInFirstPage);
 
                 buffer1.flip();
