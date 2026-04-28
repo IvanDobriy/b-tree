@@ -43,7 +43,7 @@ public class PageManagerListTest {
     }
 
     @Test
-    public void testSaveAndLoadEntity() {
+    public void testSaveAndLoadEntity() throws IOException {
         PageManagerList list = new PageManagerList(fileChannel);
 
         PageManagerEntity entity = createEntity(0L, 4096, true);
@@ -55,10 +55,14 @@ public class PageManagerListTest {
         assertEquals(entity.getId(), loaded.getId());
         assertEquals(entity.getSize(), loaded.getSize());
         assertEquals(entity.isUsed(), loaded.isUsed());
+
+        // Verify file has grown to accommodate the entity
+        // Header page (4096) + at least one data page (4096) = 8192
+        assertEquals(2 * PageManagerList.getPageSize(), fileChannel.size());
     }
 
     @Test
-    public void testSaveAndLoadMultipleEntities() {
+    public void testSaveAndLoadMultipleEntities() throws IOException {
         PageManagerList list = new PageManagerList(fileChannel);
 
         PageManagerEntity[] entities = {
@@ -78,6 +82,10 @@ public class PageManagerListTest {
             assertEquals(entities[i].getSize(), loaded.getSize());
             assertEquals(entities[i].isUsed(), loaded.isUsed());
         }
+
+        // Verify file size: header page (4096) + one data page (4096) = 8192
+        // All 3 entities fit within one data page
+        assertEquals(2 * PageManagerList.getPageSize(), fileChannel.size());
     }
 
     @Test
@@ -97,7 +105,7 @@ public class PageManagerListTest {
     }
 
     @Test
-    public void testEntityAcrossPageBoundary() {
+    public void testEntityAcrossPageBoundary() throws IOException {
         PageManagerList list = new PageManagerList(fileChannel);
 
         // Calculate index where record spans two pages
@@ -118,6 +126,10 @@ public class PageManagerListTest {
         assertEquals(entity.getId(), loaded.getId());
         assertEquals(entity.getSize(), loaded.getSize());
         assertEquals(entity.isUsed(), loaded.isUsed());
+
+        // Record 315 spans two data pages, so file should have 3 pages total:
+        // header page (4096) + data page 1 (4096) + data page 2 (4096) = 12288
+        assertEquals(3 * PageManagerList.getPageSize(), fileChannel.size());
     }
 
     @Test
@@ -129,8 +141,11 @@ public class PageManagerListTest {
         list.setEntity(entity);
 
         // File should have grown to accommodate the record
-        long expectedSize = PageManagerList.getPageSize() + (1000L * PageManagerEntity.RECORD_SIZE / PageManagerList.getPageSize() + 2) * PageManagerList.getPageSize();
-        assertTrue(fileChannel.size() > PageManagerList.getPageSize());
+        // Header page (4096) + data pages needed for record 1000
+        // 1000 records * 13 bytes = 13000 bytes, need 4 data pages (4 * 4096 = 16384)
+        // Total: 4096 + 16384 = 20480 bytes
+        long expectedSize = PageManagerList.getPageSize() + 4 * PageManagerList.getPageSize();
+        assertEquals(expectedSize, fileChannel.size());
     }
 
     @Test
@@ -140,11 +155,17 @@ public class PageManagerListTest {
             PageManagerList list = new PageManagerList(fileChannel);
             PageManagerEntity entity = createEntity(5L, 4096, true);
             list.setEntity(entity);
+
+            // Verify file size after save: header page (4096) + data page (4096) = 8192
+            assertEquals(2 * PageManagerList.getPageSize(), fileChannel.size());
         }
 
         // Reopen file channel to simulate new session
         fileChannel.close();
         fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE);
+
+        // Verify file size after reopen
+        assertEquals(2 * PageManagerList.getPageSize(), fileChannel.size());
 
         // Second session: reload and verify
         PageManagerList list = new PageManagerList(fileChannel);
