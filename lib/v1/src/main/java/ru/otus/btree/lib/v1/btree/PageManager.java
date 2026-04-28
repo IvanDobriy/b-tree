@@ -10,10 +10,12 @@ import java.util.concurrent.atomic.AtomicLong;
 public class PageManager {
     private static final int PAGE_SIZE = 4096;
     private final FileChannel fileChannel;
+    private final PageManagerList pageManagerList;
     private final AtomicLong nextPageId;
 
     public PageManager(FileChannel fileChannel) {
         this.fileChannel = fileChannel;
+        this.pageManagerList = new PageManagerList(fileChannel);
         // Start after header page (page 0 is reserved for header/root info)
         this.nextPageId = new AtomicLong(PAGE_SIZE);
     }
