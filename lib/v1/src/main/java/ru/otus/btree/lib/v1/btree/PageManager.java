@@ -64,34 +64,7 @@ public class PageManager {
 
         return pageId;
     }
-
-    /**
-     * Allocates a new page for the root node (always at page 0).
-     *
-     * @return 0 (root page ID)
-     */
-    public long allocateRootPage() {
-        return 0;
-    }
-
-    /**
-     * Gets the next page ID that would be allocated without actually allocating it.
-     *
-     * @return the next available page ID
-     */
-    public long getNextPageId() {
-        return nextPageId.get();
-    }
-
-    /**
-     * Returns the page size.
-     *
-     * @return page size in bytes
-     */
-    public int getPageSize() {
-        return PAGE_SIZE;
-    }
-
+    
     /**
      * Collects all unused (deleted) page entities from the PageManagerList.
      * An entity is considered deleted if isUsed() returns false.
