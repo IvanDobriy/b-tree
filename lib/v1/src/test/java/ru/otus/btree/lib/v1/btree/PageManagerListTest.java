@@ -140,6 +140,9 @@ public class PageManagerListTest {
         PageManagerEntity entity = createEntity(1000L, 4096, true);
         list.setEntity(entity);
 
+        // Verify header size was updated
+        assertEquals(1001, list.getSize());
+
         // File should have grown to accommodate the record
         // Header page (4096) + data pages needed for record 1000
         // 1000 records * 13 bytes = 13000 bytes, need 4 data pages (4 * 4096 = 16384)
@@ -175,6 +178,9 @@ public class PageManagerListTest {
         assertEquals(5L, loaded.getId());
         assertEquals(4096, loaded.getSize());
         assertTrue(loaded.isUsed());
+
+        // Verify header size was persisted correctly
+        assertEquals(6, list.getSize());
     }
 
     @Test
