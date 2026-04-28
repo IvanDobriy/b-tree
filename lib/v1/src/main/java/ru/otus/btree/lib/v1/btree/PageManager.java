@@ -1,5 +1,8 @@
 package ru.otus.btree.lib.v1.btree;
 
+import ru.otus.btree.lib.api.array.IArray;
+import ru.otus.btree.lib.v1.array.SingleArray;
+
 import java.nio.channels.FileChannel;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -55,5 +58,26 @@ public class PageManager {
      */
     public int getPageSize() {
         return PAGE_SIZE;
+    }
+
+    /**
+     * Collects all unused (deleted) page entities from the PageManagerList.
+     * An entity is considered deleted if isUsed() returns false.
+     *
+     * @return IArray of unused PageManagerEntity objects
+     */
+    private IArray<PageManagerEntity> collectDeletedEntities() {
+        IArray<PageManagerEntity> deletedEntities = new SingleArray<>(0);
+        PageManagerHeader header = pageManagerList.getHeader();
+        int totalEntities = (int) header.getSize();
+
+        for (int i = 0; i < totalEntities; i++) {
+            PageManagerEntity entity = pageManagerList.getEntity(i);
+            if (entity != null && !entity.isUsed()) {
+                deletedEntities.add(deletedEntities.size(), entity);
+            }
+        }
+
+        return deletedEntities;
     }
 }
