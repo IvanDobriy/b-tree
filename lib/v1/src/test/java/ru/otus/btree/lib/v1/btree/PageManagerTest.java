@@ -61,8 +61,9 @@ public class PageManagerTest {
         assertEquals(PageManagerList.getPageSize(), pageId2);     // 4096
         assertEquals(2L * PageManagerList.getPageSize(), pageId3); // 8192
 
-        // Verify file size: header page + 2 data pages = 3 * 4096 = 12288
-        assertEquals(3 * PageManagerList.getPageSize(), fileChannel.size());
+        // Verify file size: header page + 1 data page = 2 * 4096 = 8192
+        // (all 3 entities fit on a single data page)
+        assertEquals(2 * PageManagerList.getPageSize(), fileChannel.size());
     }
 
     @Test
