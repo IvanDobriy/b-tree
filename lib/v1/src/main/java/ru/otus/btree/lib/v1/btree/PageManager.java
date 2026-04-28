@@ -15,22 +15,54 @@ public class PageManager {
     private final FileChannel fileChannel;
     private final PageManagerList pageManagerList;
     private final AtomicLong nextPageId;
+    private final IArray<PageManagerEntity> deletedEntities;
 
     public PageManager(FileChannel fileChannel) {
         this.fileChannel = fileChannel;
         this.pageManagerList = new PageManagerList(fileChannel);
         // Start after header page (page 0 is reserved for header/root info)
         this.nextPageId = new AtomicLong(PAGE_SIZE);
+        this.deletedEntities = collectDeletedEntities();
     }
 
     /**
      * Allocates a new page and returns its page ID.
+     * First checks for deleted entities to reuse, otherwise creates a new one.
      * Page ID is the byte offset in the file.
      *
      * @return the newly allocated page ID
      */
     public long allocatePage() {
-        return nextPageId.getAndAdd(PAGE_SIZE);
+        long pageId;
+
+        // Check if there are deleted entities to reuse
+        if (deletedEntities.size() > 0) {
+            // Get the last deleted entity and remove it from the list
+            int lastIndex = deletedEntities.size() - 1;
+            PageManagerEntity reusedEntity = deletedEntities.get(lastIndex);
+            deletedEntities.remove(lastIndex);
+
+            // Mark as used and save
+            reusedEntity.setUsed(true);
+            pageManagerList.setEntity(reusedEntity);
+
+            pageId = reusedEntity.getId() * PAGE_SIZE;
+        } else {
+            // Allocate new page based on header size
+            long newPageIndex = pageManagerList.getHeader().getSize();
+            pageId = newPageIndex * PAGE_SIZE;
+
+            // Create new entity
+            PageManagerEntity newEntity = new PageManagerEntity();
+            newEntity.setId(newPageIndex);
+            newEntity.setSize(PAGE_SIZE);
+            newEntity.setUsed(true);
+
+            // Add to pageManagerList (this will update header size)
+            pageManagerList.setEntity(newEntity);
+        }
+
+        return pageId;
     }
 
     /**
