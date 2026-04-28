@@ -4,7 +4,6 @@ import ru.otus.btree.lib.api.array.IArray;
 import ru.otus.btree.lib.v1.array.SingleArray;
 
 import java.nio.channels.FileChannel;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Manages page allocation for the B-tree file.
@@ -14,14 +13,11 @@ public class PageManager {
     private static final int PAGE_SIZE = 4096;
     private final FileChannel fileChannel;
     private final PageManagerList pageManagerList;
-    private final AtomicLong nextPageId;
     private final IArray<PageManagerEntity> deletedEntities;
 
     public PageManager(FileChannel fileChannel) {
         this.fileChannel = fileChannel;
         this.pageManagerList = new PageManagerList(fileChannel);
-        // Start after header page (page 0 is reserved for header/root info)
-        this.nextPageId = new AtomicLong(PAGE_SIZE);
         this.deletedEntities = collectDeletedEntities();
     }
 
@@ -64,7 +60,16 @@ public class PageManager {
 
         return pageId;
     }
-    
+
+    /**
+     * Returns the page size.
+     *
+     * @return page size in bytes
+     */
+    public int getPageSize() {
+        return PAGE_SIZE;
+    }
+
     /**
      * Collects all unused (deleted) page entities from the PageManagerList.
      * An entity is considered deleted if isUsed() returns false.
