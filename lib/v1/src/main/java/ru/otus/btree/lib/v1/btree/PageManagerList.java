@@ -60,11 +60,20 @@ public class PageManagerList {
     /**
      * Saves a page entity to the file.
      * Uses entity.getId() as the record index and savePageRecord to persist the entity.
+     * If the entity's ID exceeds current header size, updates header size and saves it.
      *
      * @param entity the entity to save
      */
     public void setEntity(PageManagerEntity entity) {
         Objects.requireNonNull(entity, "entity must not be null");
+
+        // Check if entity ID exceeds current header size
+        long entityId = entity.getId();
+        if (entityId >= header.getSize()) {
+            header.setSize(entityId + 1);
+            saveHeader();
+        }
+
         savePageRecord(entity);
     }
 
