@@ -42,11 +42,10 @@ public class PageManagerTest {
 
         long pageId = pageManager.allocatePage();
 
-        // First page ID should be 0 (after header at page 0)
-        // Actually page 0 is header, so first data page is at PAGE_SIZE (4096)
-        assertEquals(PageManagerList.getPageSize(), pageId);
+        // First page ID is 0 (page index 0 from header size)
+        assertEquals(0, pageId);
 
-        // Verify file size: header page + one data page = 8192
+        // Verify file size: header page (4096) + data page (4096) = 8192
         assertEquals(2 * PageManagerList.getPageSize(), fileChannel.size());
     }
 
@@ -58,12 +57,12 @@ public class PageManagerTest {
         long pageId2 = pageManager.allocatePage();
         long pageId3 = pageManager.allocatePage();
 
-        assertEquals(PageManagerList.getPageSize(), pageId1);     // 4096
-        assertEquals(2L * PageManagerList.getPageSize(), pageId2); // 8192
-        assertEquals(3L * PageManagerList.getPageSize(), pageId3); // 12288
+        assertEquals(0, pageId1);                                  // 0
+        assertEquals(PageManagerList.getPageSize(), pageId2);     // 4096
+        assertEquals(2L * PageManagerList.getPageSize(), pageId3); // 8192
 
-        // Verify file size: header page + 3 data pages = 4 * 4096 = 16384
-        assertEquals(4 * PageManagerList.getPageSize(), fileChannel.size());
+        // Verify file size: header page + 2 data pages = 3 * 4096 = 12288
+        assertEquals(3 * PageManagerList.getPageSize(), fileChannel.size());
     }
 
     @Test
@@ -74,9 +73,9 @@ public class PageManagerTest {
         long pageId2 = pageManager.allocatePage();
         long pageId3 = pageManager.allocatePage();
 
-        assertEquals(PageManagerList.getPageSize(), pageId1);
-        assertEquals(2L * PageManagerList.getPageSize(), pageId2);
-        assertEquals(3L * PageManagerList.getPageSize(), pageId3);
+        assertEquals(0, pageId1);
+        assertEquals(PageManagerList.getPageSize(), pageId2);
+        assertEquals(2L * PageManagerList.getPageSize(), pageId3);
     }
 
     @Test
@@ -100,8 +99,8 @@ public class PageManagerTest {
         long pageId1 = pageManager1.allocatePage();
         long pageId2 = pageManager1.allocatePage();
 
-        assertEquals(PageManagerList.getPageSize(), pageId1);
-        assertEquals(2L * PageManagerList.getPageSize(), pageId2);
+        assertEquals(0, pageId1);
+        assertEquals(PageManagerList.getPageSize(), pageId2);
 
         // Close file channel
         fileChannel.close();
@@ -114,6 +113,6 @@ public class PageManagerTest {
 
         // Allocate new page - should continue from where we left off
         long pageId3 = pageManager2.allocatePage();
-        assertEquals(3L * PageManagerList.getPageSize(), pageId3);
+        assertEquals(2L * PageManagerList.getPageSize(), pageId3);
     }
 }
