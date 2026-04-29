@@ -201,7 +201,7 @@ public class FileBTreeUtils {
         }
     }
 
-    public static FileBTreeNode deserializeFileBTreeNode(byte[] data, FileChannel fileChannel) {
+    public static FileBTreeNode deserializeFileBTreeNode(byte[] data, FileChannel fileChannel, PageManager pageManager) {
         if (data == null || data.length == 0) {
             return null;
         }
@@ -214,7 +214,7 @@ public class FileBTreeUtils {
             int degree = dis.readInt();
             boolean isLeaf = dis.readBoolean();
 
-            FileBTreeNode node = new FileBTreeNode(pageId, degree, isLeaf, fileChannel);
+            FileBTreeNode node = new FileBTreeNode(pageId, degree, isLeaf, fileChannel, pageManager);
 
             // Read keys
             int keyCount = dis.readInt();
