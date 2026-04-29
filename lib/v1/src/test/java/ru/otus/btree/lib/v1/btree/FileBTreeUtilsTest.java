@@ -206,14 +206,15 @@ public class FileBTreeUtilsTest {
         try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
              FileChannel channel = raf.getChannel()) {
 
-            FileBTreeNode original = new FileBTreeNode(1L, 3, true, channel);
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode original = new FileBTreeNode(1L, 3, true, channel, pageManager);
             original.getKeys().add(original.getKeys().size(), new Element("key1", EType.STRING, "value1"));
             original.getKeys().add(original.getKeys().size(), new Element("key2", EType.INTEGER, 42));
             original.getChildren().add(original.getChildren().size(), 2L);
             original.getChildren().add(original.getChildren().size(), 3L);
 
             byte[] serialized = FileBTreeUtils.serializeFileBTreeNode(original);
-            FileBTreeNode deserialized = FileBTreeUtils.deserializeFileBTreeNode(serialized, channel);
+            FileBTreeNode deserialized = FileBTreeUtils.deserializeFileBTreeNode(serialized, channel, pageManager);
 
             assertNotNull(deserialized);
             assertEquals(1L, deserialized.getPageId());
@@ -248,7 +249,8 @@ public class FileBTreeUtilsTest {
         try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
              FileChannel channel = raf.getChannel()) {
 
-            FileBTreeNode result = FileBTreeUtils.deserializeFileBTreeNode(null, channel);
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode result = FileBTreeUtils.deserializeFileBTreeNode(null, channel, pageManager);
             assertNull(result);
         }
     }
@@ -260,7 +262,8 @@ public class FileBTreeUtilsTest {
         try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
              FileChannel channel = raf.getChannel()) {
 
-            FileBTreeNode result = FileBTreeUtils.deserializeFileBTreeNode(new byte[0], channel);
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode result = FileBTreeUtils.deserializeFileBTreeNode(new byte[0], channel, pageManager);
             assertNull(result);
         }
     }
@@ -272,10 +275,11 @@ public class FileBTreeUtilsTest {
         try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
              FileChannel channel = raf.getChannel()) {
 
-            FileBTreeNode original = new FileBTreeNode(1L, 3, false, channel);
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode original = new FileBTreeNode(1L, 3, false, channel, pageManager);
 
             byte[] serialized = FileBTreeUtils.serializeFileBTreeNode(original);
-            FileBTreeNode deserialized = FileBTreeUtils.deserializeFileBTreeNode(serialized, channel);
+            FileBTreeNode deserialized = FileBTreeUtils.deserializeFileBTreeNode(serialized, channel, pageManager);
 
             assertNotNull(deserialized);
             assertEquals(1L, deserialized.getPageId());

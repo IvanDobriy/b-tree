@@ -25,7 +25,8 @@ public class FileBTreeNodeTest {
         try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
              FileChannel channel = raf.getChannel()) {
 
-            FileBTreeNode node = new FileBTreeNode(1L, 3, true, channel);
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode node = new FileBTreeNode(1L, 3, true, channel, pageManager);
 
             assertEquals(1L, node.getPageId());
             assertEquals(3, node.getDegree());
@@ -38,7 +39,7 @@ public class FileBTreeNodeTest {
     @Test
     public void testConstructorWithNullFileChannel() {
         assertThrows(NullPointerException.class, () -> {
-            new FileBTreeNode(1L, 3, true, null);
+            new FileBTreeNode(1L, 3, true, null, null);
         });
     }
 
@@ -48,7 +49,8 @@ public class FileBTreeNodeTest {
         try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
              FileChannel channel = raf.getChannel()) {
 
-            FileBTreeNode node = new FileBTreeNode(1L, 3, true, channel);
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode node = new FileBTreeNode(1L, 3, true, channel, pageManager);
             assertTrue(node.isLeaf());
 
             node.setLeaf(false);
@@ -65,7 +67,8 @@ public class FileBTreeNodeTest {
         try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
              FileChannel channel = raf.getChannel()) {
 
-            FileBTreeNode node = new FileBTreeNode(1L, 3, true, channel);
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode node = new FileBTreeNode(1L, 3, true, channel, pageManager);
 
             Element key1 = new Element("key1", EType.STRING, "value1");
             Element key2 = new Element("key2", EType.INTEGER, 42);
@@ -85,7 +88,8 @@ public class FileBTreeNodeTest {
         try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
              FileChannel channel = raf.getChannel()) {
 
-            FileBTreeNode node = new FileBTreeNode(1L, 3, false, channel);
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode node = new FileBTreeNode(1L, 3, false, channel, pageManager);
 
             node.getChildren().add(node.getChildren().size(), 100L);
             node.getChildren().add(node.getChildren().size(), 200L);
@@ -105,7 +109,8 @@ public class FileBTreeNodeTest {
              FileChannel channel = raf.getChannel()) {
 
             // Create and save node
-            FileBTreeNode original = new FileBTreeNode(0L, 3, true, channel);
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode original = new FileBTreeNode(0L, 3, true, channel, pageManager);
             original.getKeys().add(original.getKeys().size(), new Element("key1", EType.STRING, "value1"));
             original.getKeys().add(original.getKeys().size(), new Element("key2", EType.INTEGER, 100));
             original.getChildren().add(original.getChildren().size(), 1L);
@@ -113,8 +118,8 @@ public class FileBTreeNodeTest {
 
             FileBTreeNode.saveNode(original, channel);
 
-            // Load node
-            FileBTreeNode loaded = FileBTreeNode.loadNode(0L, channel);
+            // Load the saved node
+            FileBTreeNode loaded = FileBTreeNode.loadNode(0L, channel, pageManager);
 
             assertNotNull(loaded);
             assertEquals(0L, loaded.getPageId());
@@ -136,7 +141,7 @@ public class FileBTreeNodeTest {
     @Test
     public void testLoadNodeWithNullFileChannel() {
         assertThrows(NullPointerException.class, () -> {
-            FileBTreeNode.loadNode(0L, null);
+            FileBTreeNode.loadNode(0L, null, null);
         });
     }
 
@@ -146,7 +151,8 @@ public class FileBTreeNodeTest {
         try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
              FileChannel channel = raf.getChannel()) {
 
-            FileBTreeNode node = new FileBTreeNode(0L, 3, true, channel);
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode node = new FileBTreeNode(0L, 3, true, channel, pageManager);
 
             assertThrows(NullPointerException.class, () -> {
                 FileBTreeNode.saveNode(node, null);
@@ -172,10 +178,11 @@ public class FileBTreeNodeTest {
         try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
              FileChannel channel = raf.getChannel()) {
 
-            FileBTreeNode original = new FileBTreeNode(0L, 3, false, channel);
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode original = new FileBTreeNode(0L, 3, false, channel, pageManager);
             FileBTreeNode.saveNode(original, channel);
 
-            FileBTreeNode loaded = FileBTreeNode.loadNode(0L, channel);
+            FileBTreeNode loaded = FileBTreeNode.loadNode(0L, channel, pageManager);
 
             assertNotNull(loaded);
             assertEquals(0, loaded.getKeys().size());
