@@ -23,8 +23,9 @@ public class FileBTreeNode {
     private PageManager pageManager; // Page allocation manager
 
 
-    public static FileBTreeNode loadNode(long pageId, FileChannel fileChannel) {
+    public static FileBTreeNode loadNode(long pageId, FileChannel fileChannel, PageManager pageManager) {
         Objects.requireNonNull(fileChannel, "fileChannel must not be null");
+        Objects.requireNonNull(pageManager, "pageManager must not be null");
 
         try {
             // Read node size first (4 bytes int)
@@ -42,7 +43,7 @@ public class FileBTreeNode {
             dataBuffer.get(nodeData);
 
             // Deserialize node
-            return FileBTreeUtils.deserializeFileBTreeNode(nodeData, fileChannel);
+            return FileBTreeUtils.deserializeFileBTreeNode(nodeData, fileChannel, pageManager);
         } catch (IOException e) {
             throw new RuntimeException("Failed to load node at pageId: " + pageId, e);
         }
@@ -154,7 +155,7 @@ public class FileBTreeNode {
 
         // Load the child node and search recursively
         Long childPageId = children.get(childIndex);
-        FileBTreeNode childNode = loadNode(childPageId, fileChannel);
+        FileBTreeNode childNode = loadNode(childPageId, fileChannel, pageManager);
         return childNode.findByKey(key);
     }
 
@@ -207,7 +208,7 @@ public class FileBTreeNode {
 
             if (childIndex < children.size()) {
                 Long childPageId = children.get(childIndex);
-                FileBTreeNode childNode = loadNode(childPageId, fileChannel);
+                FileBTreeNode childNode = loadNode(childPageId, fileChannel, pageManager);
                 childNode.insertByKey(key);
                 saveNode(childNode, fileChannel);
             } else {
@@ -326,7 +327,7 @@ public class FileBTreeNode {
             saveNode(this, fileChannel);
 
             // Save right sibling with updated parent
-            FileBTreeNode rightSibling = loadNode(rightSiblingPageId, fileChannel);
+            FileBTreeNode rightSibling = loadNode(rightSiblingPageId, fileChannel, pageManager);
             rightSibling.setParentPageId(newRootPageId);
             saveNode(rightSibling, fileChannel);
 
@@ -334,7 +335,7 @@ public class FileBTreeNode {
             saveNode(newRoot, fileChannel);
         } else {
             // Load parent and insert median key
-            FileBTreeNode parent = loadNode(parentPageId, fileChannel);
+            FileBTreeNode parent = loadNode(parentPageId, fileChannel, pageManager);
 
             // Insert median key into parent using insertKeyIntoNode
             int keyInsertIndex = parent.insertKeyIntoNode(medianKey);
