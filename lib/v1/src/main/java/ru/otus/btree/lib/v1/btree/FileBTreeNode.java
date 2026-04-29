@@ -343,11 +343,6 @@ public class FileBTreeNode {
             int childInsertIndex = keyInsertIndex + 1;
             parent.getChildren().add(childInsertIndex, rightSiblingPageId);
 
-            // Update parent reference of right sibling
-            FileBTreeNode rightSibling = loadNode(rightSiblingPageId, fileChannel);
-            rightSibling.setParentPageId(parentPageId);
-            saveNode(rightSibling, fileChannel);
-
             // Save parent
             saveNode(parent, fileChannel);
 
