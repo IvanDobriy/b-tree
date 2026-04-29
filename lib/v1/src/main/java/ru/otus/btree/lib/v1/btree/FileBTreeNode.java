@@ -69,16 +69,6 @@ public class FileBTreeNode {
         }
     }
 
-    public FileBTreeNode(long pageId, int degree, boolean isLeaf, FileChannel fileChannel) {
-        this.fileChannel = Objects.requireNonNull(fileChannel, "fileChannel must not be null");
-        this.pageId = pageId;
-        this.degree = degree;
-        this.isLeaf = isLeaf;
-        this.keys = new SingleArray<>(0);
-        this.children = new SingleArray<>(0);
-        this.parentPageId = -1; // No parent by default (root node)
-    }
-
     public FileBTreeNode(long pageId, int degree, boolean isLeaf, FileChannel fileChannel, PageManager pageManager) {
         this.fileChannel = Objects.requireNonNull(fileChannel, "fileChannel must not be null");
         this.pageManager = Objects.requireNonNull(pageManager, "pageManager must not be null");
@@ -310,9 +300,6 @@ public class FileBTreeNode {
 
         // Save the right sibling
         saveNode(rightSibling, fileChannel);
-
-        // Add right sibling as a child
-        children.add(children.size(), newPageId);
 
         // Promote medianKey to parent (or create new root if this is root)
         promoteToParent(medianKey, newPageId);
