@@ -33,6 +33,7 @@ public class FileBTreeNodeTest {
             assertTrue(node.isLeaf());
             assertEquals(0, node.getKeys().size());
             assertEquals(0, node.getChildren().size());
+            assertEquals(-1L, node.getParentPageId());
         }
     }
 
@@ -41,6 +42,22 @@ public class FileBTreeNodeTest {
         assertThrows(NullPointerException.class, () -> {
             new FileBTreeNode(1L, 3, true, null, null);
         });
+    }
+
+    @Test
+    public void testParentPageId() throws Exception {
+        File tempFile = tempDir.resolve("node-parent-test.tmp").toFile();
+        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
+             FileChannel channel = raf.getChannel()) {
+
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode node = new FileBTreeNode(1L, 3, true, channel, pageManager);
+
+            assertEquals(-1L, node.getParentPageId());
+
+            node.setParentPageId(5L);
+            assertEquals(5L, node.getParentPageId());
+        }
     }
 
     @Test
@@ -103,91 +120,64 @@ public class FileBTreeNodeTest {
     }
 
     @Test
-    public void testSaveAndLoadNode() throws Exception {
-        File tempFile = tempDir.resolve("node-save-load-test.tmp").toFile();
-        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
-             FileChannel channel = raf.getChannel()) {
-
-            // Create and save node
-            PageManager pageManager = new PageManager(channel);
-            FileBTreeNode original = new FileBTreeNode(0L, 3, true, channel, pageManager);
-            original.getKeys().add(original.getKeys().size(), new Element("key1", EType.STRING, "value1"));
-            original.getKeys().add(original.getKeys().size(), new Element("key2", EType.INTEGER, 100));
-            original.getChildren().add(original.getChildren().size(), 1L);
-            original.getChildren().add(original.getChildren().size(), 2L);
-
-            FileBTreeNode.saveNode(original, channel);
-
-            // Load the saved node
-            FileBTreeNode loaded = FileBTreeNode.loadNode(0L, channel, pageManager);
-
-            assertNotNull(loaded);
-            assertEquals(0L, loaded.getPageId());
-            assertEquals(3, loaded.getDegree());
-            assertTrue(loaded.isLeaf());
-            assertEquals(2, loaded.getKeys().size());
-            assertEquals(2, loaded.getChildren().size());
-
-            assertEquals("key1", loaded.getKeys().get(0).getName());
-            assertEquals("value1", loaded.getKeys().get(0).getValue());
-            assertEquals("key2", loaded.getKeys().get(1).getName());
-            assertEquals(100, loaded.getKeys().get(1).getValue());
-
-            assertEquals(1L, loaded.getChildren().get(0));
-            assertEquals(2L, loaded.getChildren().get(1));
-        }
-    }
-
-    @Test
-    public void testLoadNodeWithNullFileChannel() {
-        assertThrows(NullPointerException.class, () -> {
-            FileBTreeNode.loadNode(0L, null, null);
-        });
-    }
-
-    @Test
-    public void testSaveNodeWithNullFileChannel() throws Exception {
-        File tempFile = tempDir.resolve("node-save-null-channel-test.tmp").toFile();
+    public void testFindByKeyInEmptyNode() throws Exception {
+        File tempFile = tempDir.resolve("node-find-empty-test.tmp").toFile();
         try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
              FileChannel channel = raf.getChannel()) {
 
             PageManager pageManager = new PageManager(channel);
             FileBTreeNode node = new FileBTreeNode(0L, 3, true, channel, pageManager);
 
-            assertThrows(NullPointerException.class, () -> {
-                FileBTreeNode.saveNode(node, null);
-            });
+            Element key = new Element("key1", EType.STRING, "value1");
+            assertNull(node.findByKey(key));
         }
     }
 
     @Test
-    public void testSaveNodeWithNullNode() throws Exception {
-        File tempFile = tempDir.resolve("node-save-null-node-test.tmp").toFile();
-        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
-             FileChannel channel = raf.getChannel()) {
-
-            assertThrows(NullPointerException.class, () -> {
-                FileBTreeNode.saveNode(null, channel);
-            });
-        }
-    }
-
-    @Test
-    public void testEmptyNodeSaveAndLoad() throws Exception {
-        File tempFile = tempDir.resolve("node-empty-test.tmp").toFile();
+    public void testInsertAndFindKey() throws Exception {
+        File tempFile = tempDir.resolve("node-insert-find-test.tmp").toFile();
         try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
              FileChannel channel = raf.getChannel()) {
 
             PageManager pageManager = new PageManager(channel);
-            FileBTreeNode original = new FileBTreeNode(0L, 3, false, channel, pageManager);
-            FileBTreeNode.saveNode(original, channel);
+            FileBTreeNode node = new FileBTreeNode(0L, 3, true, channel, pageManager);
 
-            FileBTreeNode loaded = FileBTreeNode.loadNode(0L, channel, pageManager);
+            Element key1 = new Element("key1", EType.STRING, "value1");
+            Element key2 = new Element("key2", EType.STRING, "value2");
 
-            assertNotNull(loaded);
-            assertEquals(0, loaded.getKeys().size());
-            assertEquals(0, loaded.getChildren().size());
-            assertFalse(loaded.isLeaf());
+            node.insertByKey(key1);
+            node.insertByKey(key2);
+
+            assertNotNull(node.findByKey(key1));
+            assertNotNull(node.findByKey(key2));
+
+            Element key3 = new Element("key3", EType.STRING, "value3");
+            assertNull(node.findByKey(key3));
         }
     }
+
+    @Test
+    public void testInsertKeyMaintainsSortedOrder() throws Exception {
+        File tempFile = tempDir.resolve("node-sorted-test.tmp").toFile();
+        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
+             FileChannel channel = raf.getChannel()) {
+
+            PageManager pageManager = new PageManager(channel);
+            FileBTreeNode node = new FileBTreeNode(0L, 3, true, channel, pageManager);
+
+            Element keyB = new Element("key", EType.STRING, "B");
+            Element keyA = new Element("key", EType.STRING, "A");
+            Element keyC = new Element("key", EType.STRING, "C");
+
+            node.insertByKey(keyB);
+            node.insertByKey(keyA);
+            node.insertByKey(keyC);
+
+            assertEquals(3, node.getKeys().size());
+            assertEquals("A", node.getKeys().get(0).getValue());
+            assertEquals("B", node.getKeys().get(1).getValue());
+            assertEquals("C", node.getKeys().get(2).getValue());
+        }
+    }
+
 }

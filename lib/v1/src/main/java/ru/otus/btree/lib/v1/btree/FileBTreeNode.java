@@ -23,7 +23,7 @@ public class FileBTreeNode {
     private PageManager pageManager; // Page allocation manager
 
 
-    public static FileBTreeNode loadNode(long pageId, FileChannel fileChannel, PageManager pageManager) {
+    private static FileBTreeNode loadNode(long pageId, FileChannel fileChannel, PageManager pageManager) {
         Objects.requireNonNull(fileChannel, "fileChannel must not be null");
         Objects.requireNonNull(pageManager, "pageManager must not be null");
 
@@ -49,7 +49,7 @@ public class FileBTreeNode {
         }
     }
 
-    public static void saveNode(FileBTreeNode node, FileChannel fileChannel) {
+    private static void saveNode(FileBTreeNode node, FileChannel fileChannel) {
         Objects.requireNonNull(fileChannel, "fileChannel must not be null");
         Objects.requireNonNull(node, "node must not be null");
 
