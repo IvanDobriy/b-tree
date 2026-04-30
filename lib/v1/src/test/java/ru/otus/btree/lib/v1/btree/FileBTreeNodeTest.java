@@ -158,12 +158,18 @@ public class FileBTreeNodeTest {
 
     @Test
     public void testInsertKeyMaintainsSortedOrder() throws Exception {
-        File tempFile = tempDir.resolve("node-sorted-test.tmp").toFile();
-        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
-             FileChannel channel = raf.getChannel()) {
+        File pageTempFile = tempDir.resolve("page-manager-node-sorted-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("b-tree-node-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()
+        ) {
 
-            PageManager pageManager = new PageManager(channel);
-            FileBTreeNode node = new FileBTreeNode(0L, 3, true, channel, pageManager);
+            PageManager pageManager = new PageManager(pageChannel);
+            long page = pageManager.allocatePage();
+            FileBTreeNode node = new FileBTreeNode(page, 3, true, nodeChannel, pageManager);
+            FileBTreeNode.saveNode(node, pageChannel);
 
             Element keyB = new Element("key", EType.STRING, "B");
             Element keyA = new Element("key", EType.STRING, "A");

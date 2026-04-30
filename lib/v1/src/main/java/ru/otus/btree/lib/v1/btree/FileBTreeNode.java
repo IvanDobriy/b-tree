@@ -23,7 +23,7 @@ public class FileBTreeNode {
     private PageManager pageManager; // Page allocation manager
 
 
-    private static FileBTreeNode loadNode(long pageId, FileChannel fileChannel, PageManager pageManager) {
+    public static FileBTreeNode loadNode(long pageId, FileChannel fileChannel, PageManager pageManager) {
         Objects.requireNonNull(fileChannel, "fileChannel must not be null");
         Objects.requireNonNull(pageManager, "pageManager must not be null");
 
@@ -49,7 +49,7 @@ public class FileBTreeNode {
         }
     }
 
-    private static void saveNode(FileBTreeNode node, FileChannel fileChannel) {
+    public static void saveNode(FileBTreeNode node, FileChannel fileChannel) {
         Objects.requireNonNull(fileChannel, "fileChannel must not be null");
         Objects.requireNonNull(node, "node must not be null");
 
@@ -64,7 +64,9 @@ public class FileBTreeNode {
             buffer.flip();
 
             fileChannel.position(node.pageId);
-            fileChannel.write(buffer);
+            while (buffer.hasRemaining()){
+                fileChannel.write(buffer);
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to save node at pageId: " + node.pageId, e);
         }
@@ -199,7 +201,7 @@ public class FileBTreeNode {
             insertKeyIntoNode(key);
 
             // Check if rebalancing is needed after insertion
-            if (keys.size() > degree) {
+            if (keys.size() > degree - 1) {
                 splitNode();
             }
         } else {
@@ -215,7 +217,7 @@ public class FileBTreeNode {
                 // If no valid child, insert into current node
                 insertKeyIntoNode(key);
 
-                if (keys.size() > degree) {
+                if (keys.size() > degree - 1) {
                     splitNode();
                 }
             }
