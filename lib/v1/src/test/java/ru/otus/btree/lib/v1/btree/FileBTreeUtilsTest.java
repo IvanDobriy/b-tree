@@ -220,6 +220,8 @@ public class FileBTreeUtilsTest {
             assertEquals(1L, deserialized.getPageId());
             assertEquals(3, deserialized.getDegree());
             assertTrue(deserialized.isLeaf());
+            // parentPageId is serialized/deserialized; should match the original (default -1)
+            assertEquals(original.getParentPageId(), deserialized.getParentPageId());
             assertEquals(2, deserialized.getKeys().size());
             assertEquals(2, deserialized.getChildren().size());
 
@@ -285,6 +287,8 @@ public class FileBTreeUtilsTest {
             assertEquals(1L, deserialized.getPageId());
             assertEquals(3, deserialized.getDegree());
             assertFalse(deserialized.isLeaf());
+            // parentPageId is serialized/deserialized; should match the original (default -1)
+            assertEquals(original.getParentPageId(), deserialized.getParentPageId());
             assertEquals(0, deserialized.getKeys().size());
             assertEquals(0, deserialized.getChildren().size());
         }
