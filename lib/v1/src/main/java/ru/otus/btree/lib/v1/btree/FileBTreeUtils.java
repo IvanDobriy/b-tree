@@ -175,6 +175,7 @@ public class FileBTreeUtils {
             dos.writeLong(node.getPageId());
             dos.writeInt(node.getDegree());
             dos.writeBoolean(node.isLeaf());
+            dos.writeLong(node.getParentPageId());
 
             // Write keys
             IArray<Element> keys = node.getKeys();
@@ -213,8 +214,10 @@ public class FileBTreeUtils {
             long pageId = dis.readLong();
             int degree = dis.readInt();
             boolean isLeaf = dis.readBoolean();
+            long parentPageId = dis.readLong();
 
             FileBTreeNode node = new FileBTreeNode(pageId, degree, isLeaf, fileChannel, pageManager);
+            node.setParentPageId(parentPageId);
 
             // Read keys
             int keyCount = dis.readInt();
