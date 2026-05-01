@@ -189,7 +189,7 @@ public class FileBTreeNodeTest {
 
             PageManager pageManager = new PageManager(pageChannel);
             long page = pageManager.allocatePage();
-            FileBTreeNode node = new FileBTreeNode(page, 3, true, nodeChannel, pageManager);
+            FileBTreeNode node = new FileBTreeNode(page, 4, true, nodeChannel, pageManager);
             FileBTreeNode.saveNode(node, pageChannel);
 
             Element keyB = new Element("key", EType.STRING, "B");
@@ -204,6 +204,58 @@ public class FileBTreeNodeTest {
             assertEquals("A", node.getKeys().get(0).getValue());
             assertEquals("B", node.getKeys().get(1).getValue());
             assertEquals("C", node.getKeys().get(2).getValue());
+        }
+    }
+
+    @Test
+    public void testSplitNodeCreatesNewRoot() throws Exception {
+        File pageTempFile = tempDir.resolve("page-manager-split-root-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-split-root-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()
+        ) {
+            PageManager pageManager = new PageManager(pageChannel);
+            long page = pageManager.allocatePage();
+            FileBTreeNode node = new FileBTreeNode(page, 3, true, nodeChannel, pageManager);
+
+            Element keyA = new Element("key", EType.STRING, "A");
+            Element keyB = new Element("key", EType.STRING, "B");
+            Element keyC = new Element("key", EType.STRING, "C");
+
+            node.insertByKey(keyA);
+            node.insertByKey(keyB);
+            node.insertByKey(keyC);
+
+            assertNotNull(node.findByKey(keyA));
+            assertNotNull(node.findByKey(keyB));
+            assertNotNull(node.findByKey(keyC));
+        }
+    }
+
+    @Test
+    public void testSplitNodePreservesKeyOrder() throws Exception {
+        File pageTempFile = tempDir.resolve("page-manager-split-order-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-split-order-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()
+        ) {
+            PageManager pageManager = new PageManager(pageChannel);
+            long page = pageManager.allocatePage();
+            FileBTreeNode node = new FileBTreeNode(page, 3, true, nodeChannel, pageManager);
+
+            node.insertByKey(new Element("key", EType.STRING, "D"));
+            node.insertByKey(new Element("key", EType.STRING, "B"));
+            node.insertByKey(new Element("key", EType.STRING, "A"));
+            node.insertByKey(new Element("key", EType.STRING, "C"));
+
+            assertNotNull(node.findByKey(new Element("key", EType.STRING, "A")));
+            assertNotNull(node.findByKey(new Element("key", EType.STRING, "B")));
+            assertNotNull(node.findByKey(new Element("key", EType.STRING, "C")));
+            assertNotNull(node.findByKey(new Element("key", EType.STRING, "D")));
         }
     }
 
