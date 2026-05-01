@@ -21,12 +21,15 @@ public class FileBTreeNodeTest {
 
     @Test
     public void testConstructorWithValidArguments() throws Exception {
-        File tempFile = tempDir.resolve("node-test.tmp").toFile();
-        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
-             FileChannel channel = raf.getChannel()) {
+        File pageTempFile = tempDir.resolve("page-manager-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
 
-            PageManager pageManager = new PageManager(channel);
-            FileBTreeNode node = new FileBTreeNode(1L, 3, true, channel, pageManager);
+            PageManager pageManager = new PageManager(pageChannel);
+            FileBTreeNode node = new FileBTreeNode(1L, 3, true, nodeChannel, pageManager);
 
             assertEquals(1L, node.getPageId());
             assertEquals(3, node.getDegree());
@@ -46,12 +49,15 @@ public class FileBTreeNodeTest {
 
     @Test
     public void testParentPageId() throws Exception {
-        File tempFile = tempDir.resolve("node-parent-test.tmp").toFile();
-        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
-             FileChannel channel = raf.getChannel()) {
+        File pageTempFile = tempDir.resolve("page-manager-parent-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-parent-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
 
-            PageManager pageManager = new PageManager(channel);
-            FileBTreeNode node = new FileBTreeNode(1L, 3, true, channel, pageManager);
+            PageManager pageManager = new PageManager(pageChannel);
+            FileBTreeNode node = new FileBTreeNode(1L, 3, true, nodeChannel, pageManager);
 
             assertEquals(-1L, node.getParentPageId());
 
@@ -62,12 +68,15 @@ public class FileBTreeNodeTest {
 
     @Test
     public void testSetLeaf() throws Exception {
-        File tempFile = tempDir.resolve("node-leaf-test.tmp").toFile();
-        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
-             FileChannel channel = raf.getChannel()) {
+        File pageTempFile = tempDir.resolve("page-manager-leaf-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-leaf-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
 
-            PageManager pageManager = new PageManager(channel);
-            FileBTreeNode node = new FileBTreeNode(1L, 3, true, channel, pageManager);
+            PageManager pageManager = new PageManager(pageChannel);
+            FileBTreeNode node = new FileBTreeNode(1L, 3, true, nodeChannel, pageManager);
             assertTrue(node.isLeaf());
 
             node.setLeaf(false);
@@ -80,12 +89,15 @@ public class FileBTreeNodeTest {
 
     @Test
     public void testAddKeys() throws Exception {
-        File tempFile = tempDir.resolve("node-keys-test.tmp").toFile();
-        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
-             FileChannel channel = raf.getChannel()) {
+        File pageTempFile = tempDir.resolve("page-manager-keys-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-keys-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
 
-            PageManager pageManager = new PageManager(channel);
-            FileBTreeNode node = new FileBTreeNode(1L, 3, true, channel, pageManager);
+            PageManager pageManager = new PageManager(pageChannel);
+            FileBTreeNode node = new FileBTreeNode(1L, 3, true, nodeChannel, pageManager);
 
             Element key1 = new Element("key1", EType.STRING, "value1");
             Element key2 = new Element("key2", EType.INTEGER, 42);
@@ -101,12 +113,15 @@ public class FileBTreeNodeTest {
 
     @Test
     public void testAddChildren() throws Exception {
-        File tempFile = tempDir.resolve("node-children-test.tmp").toFile();
-        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
-             FileChannel channel = raf.getChannel()) {
+        File pageTempFile = tempDir.resolve("page-manager-children-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-children-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
 
-            PageManager pageManager = new PageManager(channel);
-            FileBTreeNode node = new FileBTreeNode(1L, 3, false, channel, pageManager);
+            PageManager pageManager = new PageManager(pageChannel);
+            FileBTreeNode node = new FileBTreeNode(1L, 3, false, nodeChannel, pageManager);
 
             node.getChildren().add(node.getChildren().size(), 100L);
             node.getChildren().add(node.getChildren().size(), 200L);
@@ -121,12 +136,15 @@ public class FileBTreeNodeTest {
 
     @Test
     public void testFindByKeyInEmptyNode() throws Exception {
-        File tempFile = tempDir.resolve("node-find-empty-test.tmp").toFile();
-        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
-             FileChannel channel = raf.getChannel()) {
+        File pageTempFile = tempDir.resolve("page-manager-find-empty-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-find-empty-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
 
-            PageManager pageManager = new PageManager(channel);
-            FileBTreeNode node = new FileBTreeNode(0L, 3, true, channel, pageManager);
+            PageManager pageManager = new PageManager(pageChannel);
+            FileBTreeNode node = new FileBTreeNode(0L, 3, true, nodeChannel, pageManager);
 
             Element key = new Element("key1", EType.STRING, "value1");
             assertNull(node.findByKey(key));
@@ -135,12 +153,15 @@ public class FileBTreeNodeTest {
 
     @Test
     public void testInsertAndFindKey() throws Exception {
-        File tempFile = tempDir.resolve("node-insert-find-test.tmp").toFile();
-        try (RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
-             FileChannel channel = raf.getChannel()) {
+        File pageTempFile = tempDir.resolve("page-manager-insert-find-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-insert-find-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
 
-            PageManager pageManager = new PageManager(channel);
-            FileBTreeNode node = new FileBTreeNode(0L, 3, true, channel, pageManager);
+            PageManager pageManager = new PageManager(pageChannel);
+            FileBTreeNode node = new FileBTreeNode(0L, 3, true, nodeChannel, pageManager);
 
             Element key1 = new Element("key1", EType.STRING, "value1");
             Element key2 = new Element("key2", EType.STRING, "value2");
