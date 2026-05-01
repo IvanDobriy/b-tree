@@ -228,9 +228,15 @@ public class FileBTreeNodeTest {
             node.insertByKey(keyB);
             node.insertByKey(keyC);
 
-            assertNotNull(node.findByKey(keyA));
-            assertNotNull(node.findByKey(keyB));
-            assertNotNull(node.findByKey(keyC));
+            // After split a new root should be created at page 0 — load it and verify
+            FileBTreeNode root = FileBTreeNode.loadNode(0L, nodeChannel, pageManager);
+            assertNotNull(root, "Expected new root at page 0 after split");
+            assertTrue(root.getChildren().size() > 0, "Root should have children after split");
+
+            // Verify searches from the new root succeed for inserted keys
+            assertNotNull(root.findByKey(keyA));
+            assertNotNull(root.findByKey(keyB));
+            assertNotNull(root.findByKey(keyC));
         }
     }
 
