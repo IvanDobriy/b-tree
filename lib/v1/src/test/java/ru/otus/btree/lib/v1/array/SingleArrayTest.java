@@ -1,5 +1,6 @@
 package ru.otus.btree.lib.v1.array;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import ru.otus.btree.lib.api.array.IArray;
@@ -185,5 +186,18 @@ public class SingleArrayTest {
         }
 
         assertEquals(0, array.size());
+    }
+
+    @Test
+    public void addToArray(){
+        IArray<Integer> array = new SingleArray<>(0);
+        array.add(0, 1);
+        array.add(1, 2);
+        array.add(0, 3);
+        array.add(0, 4);
+        assertEquals(4, array.get(0));
+        assertEquals(3, array.get(1));
+        assertEquals(1, array.get(2));
+        assertEquals(2, array.get(3));
     }
 }
