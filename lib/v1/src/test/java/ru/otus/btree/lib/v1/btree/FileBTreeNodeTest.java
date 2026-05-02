@@ -285,11 +285,11 @@ public class FileBTreeNodeTest {
 
             node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, node::set));
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 100; i++) {
                 node.get().insertByKey(new Element("key", EType.STRING, "" + i));
             }
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 100; i++) {
                 Element found = node.get().findByKey(new Element("key", EType.STRING, "" + i));
                 assertNotNull(found, "Should find value" + i);
             }

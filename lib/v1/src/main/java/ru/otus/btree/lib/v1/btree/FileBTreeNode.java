@@ -349,7 +349,7 @@ public class FileBTreeNode {
 
             // Save the new root
             saveNode(newRoot, fileChannel);
-            if(onRootChanged != null){
+            if (onRootChanged != null) {
                 onRootChanged.execute(newRoot);
             }
         } else {
@@ -365,6 +365,10 @@ public class FileBTreeNode {
 
             // Save parent
             saveNode(parent, fileChannel);
+
+            if (parentPageId == 0 && onRootChanged != null) {
+                onRootChanged.execute(parent);
+            }
 
             // Recursively split parent if needed
             if (parent.getKeys().size() > degree - 1) {
