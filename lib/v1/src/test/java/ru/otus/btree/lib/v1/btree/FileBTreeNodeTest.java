@@ -271,7 +271,7 @@ public class FileBTreeNodeTest {
     }
 
     @Test
-    public void testSplitNodePreservesKeyOrderWithManyElements() throws Exception {
+    public void testSplitNodePreservesKeyOrderWithManyElementsElementTypeInteger() throws Exception {
         File pageTempFile = tempDir.resolve("page-manager-split-order-many-test.tmp").toFile();
         File nodeTempFile = tempDir.resolve("node-split-order-many-test.tmp").toFile();
         try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
@@ -285,12 +285,12 @@ public class FileBTreeNodeTest {
 
             node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, node::set));
 
-            for (int i = 0; i < 100; i++) {
-                node.get().insertByKey(new Element("key", EType.STRING, "" + i));
+            for (int i = 0; i < 1000; i++) {
+                node.get().insertByKey(new Element("key", EType.INTEGER,  i));
             }
-
-            for (int i = 0; i < 100; i++) {
-                Element found = node.get().findByKey(new Element("key", EType.STRING, "" + i));
+            
+            for (int i = 0; i < 1000; i++) {
+                Element found = node.get().findByKey(new Element("key", EType.INTEGER,  i));
                 assertNotNull(found, "Should find value" + i);
             }
         }
