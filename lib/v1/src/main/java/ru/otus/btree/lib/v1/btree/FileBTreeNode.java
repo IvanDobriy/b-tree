@@ -217,6 +217,8 @@ public class FileBTreeNode {
             // Check if rebalancing is needed after insertion
             if (keys.size() > degree - 1) {
                 splitNode();
+            }else {
+                saveNode(this, fileChannel);
             }
         } else {
             // Find the appropriate child to insert into
