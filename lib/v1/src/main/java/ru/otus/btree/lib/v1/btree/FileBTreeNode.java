@@ -21,7 +21,12 @@ public class FileBTreeNode {
     private FileChannel fileChannel;
     private long parentPageId; // -1 means no parent (root node)
     private PageManager pageManager; // Page allocation manager
+    private IOnRootChanged onRootChanged;
 
+
+    public interface IOnRootChanged {
+        void execute(FileBTreeNode root);
+    }
 
     public static FileBTreeNode loadNode(long pageId, FileChannel fileChannel, PageManager pageManager) {
         Objects.requireNonNull(fileChannel, "fileChannel must not be null");
@@ -64,7 +69,7 @@ public class FileBTreeNode {
             buffer.flip();
 
             fileChannel.position(node.pageId);
-            while (buffer.hasRemaining()){
+            while (buffer.hasRemaining()) {
                 fileChannel.write(buffer);
             }
         } catch (IOException e) {
@@ -81,6 +86,12 @@ public class FileBTreeNode {
         this.keys = new SingleArray<>(0);
         this.children = new SingleArray<>(0);
         this.parentPageId = -1; // No parent by default (root node)
+        this.onRootChanged = null;
+    }
+
+    public FileBTreeNode(long pageId, int degree, boolean isLeaf, FileChannel fileChannel, PageManager pageManager, IOnRootChanged onRootChanged) {
+        this(pageId, degree, isLeaf, fileChannel, pageManager);
+        this.onRootChanged = onRootChanged;
     }
 
     public void setPageManager(PageManager pageManager) {
@@ -106,7 +117,6 @@ public class FileBTreeNode {
     public void setParentPageId(long parentPageId) {
         this.parentPageId = parentPageId;
     }
-
 
 
     public int getDegree() {
@@ -169,7 +179,7 @@ public class FileBTreeNode {
         // Compare by type first
         if (a.getType() != b.getType()) {
             throw new IllegalArgumentException("Cannot compare elements of different types: " +
-                a.getType() + " and " + b.getType());
+                    a.getType() + " and " + b.getType());
         }
 
         // Compare by value based on type
@@ -335,6 +345,9 @@ public class FileBTreeNode {
 
             // Save the new root
             saveNode(newRoot, fileChannel);
+            if(onRootChanged != null){
+                onRootChanged.execute(newRoot);
+            }
         } else {
             // Load parent and insert median key
             FileBTreeNode parent = loadNode(parentPageId, fileChannel, pageManager);

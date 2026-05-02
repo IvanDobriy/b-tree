@@ -5,31 +5,53 @@ import ru.otus.btree.lib.api.btree.IBTree;
 import ru.otus.btree.lib.api.btree.IEntity;
 
 import java.nio.channels.FileChannel;
-import java.nio.file.Path;
 import java.util.Objects;
 
 public class FileBTree implements IBTree {
-    private final Path entityName;
-    private FileChannel fileChannel;
+    private FileBTreeNode fileBTreeNode;
+    private PageManager pageManager;
+    private FileChannel pageManagerChannel;
+    private FileChannel nodeChannel;
+    private final int degree;
+    private FileBTreeNode root;
 
-    public FileBTree(Path entityName) {
-        this.entityName = Objects.requireNonNull(entityName, "entityName must not be null");
+
+    private final FileBTreeNode.IOnRootChanged onRootChanged = (FileBTreeNode root) -> {
+        this.root = root;
+    };
+
+    public FileBTree(FileChannel pageManagerChannel, FileChannel nodeChannel, int degree) {
+        this.pageManagerChannel = Objects.requireNonNull(pageManagerChannel, "page manager channel is null");
+        this.nodeChannel = Objects.requireNonNull(nodeChannel, "node channel is null");
+        this.degree = degree;
+        pageManager = new PageManager(this.pageManagerChannel);
+        root = getRoot();
     }
 
     @Override
     public void insert(String keyName, IEntity entity) {
-        // TODO: Implement insert
+        root.insertByKey(entity.get(keyName));
     }
 
     @Override
     public IEntity search(Element element) {
-        // TODO: Implement search
+        element = root.findByKey(element);
         return null;
     }
 
     @Override
     public void delete(Element element) {
         // TODO: Implement delete
+        throw new RuntimeException("not yet implemented");
     }
 
+    public FileBTreeNode getRoot() {
+        if (pageManager.getPageSize() != 0) {//todo need fix, need add real check root existing
+            long pageId = pageManager.allocatePage();
+            FileBTreeNode newRoot = new FileBTreeNode(pageId, degree, false, nodeChannel, pageManager, onRootChanged);
+            FileBTreeNode.saveNode(newRoot, nodeChannel);
+            return newRoot;
+        }
+        return FileBTreeNode.loadNode(0, nodeChannel, pageManager);
+    }
 }
