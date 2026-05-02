@@ -230,7 +230,7 @@ public class FileBTreeNodeTest {
             node.insertByKey(keyC);
 
             // After split a new root should be created at page 0 — load it and verify
-            FileBTreeNode root = FileBTreeNode.loadNode(0L, nodeChannel, pageManager);
+            FileBTreeNode root = FileBTreeNode.loadNode(0L, nodeChannel, pageManager, null);
             assertNotNull(root, "Expected new root at page 0 after split");
             assertTrue(root.getChildren().size() > 0, "Root should have children after split");
 

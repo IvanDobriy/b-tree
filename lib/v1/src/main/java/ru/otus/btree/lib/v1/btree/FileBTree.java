@@ -52,6 +52,6 @@ public class FileBTree implements IBTree {
             FileBTreeNode.saveNode(newRoot, nodeChannel);
             return newRoot;
         }
-        return FileBTreeNode.loadNode(0, nodeChannel, pageManager);
+        return FileBTreeNode.loadNode(0, nodeChannel, pageManager, onRootChanged);
     }
 }
