@@ -29,12 +29,12 @@ public class FileBTree implements IBTree {
     }
 
     @Override
-    public void insert(String keyName, IEntity entity) {
+    public void insert(String keyName, IEntity entity, long position) {
         root.insertByKey(entity.get(keyName));
     }
 
     @Override
-    public IEntity search(Element element) {
+    public long search(Element element) {
         element = root.findByKey(element);
         return null;
     }
