@@ -235,6 +235,8 @@ public class FileBTreeNode {
 
                 if (keys.size() > degree - 1) {
                     splitNode();
+                }else{
+                    saveNode(this, fileChannel);
                 }
             }
         }
