@@ -30,6 +30,7 @@ public class FileBTreeUtilsTest {
         assertEquals("testKey", deserialized.getName());
         assertEquals(EType.STRING, deserialized.getType());
         assertEquals("testValue", deserialized.getValue());
+        assertEquals(-1L, deserialized.getPosition());
     }
 
     @Test
@@ -42,6 +43,20 @@ public class FileBTreeUtilsTest {
         assertEquals("intKey", deserialized.getName());
         assertEquals(EType.INTEGER, deserialized.getType());
         assertEquals(42, deserialized.getValue());
+        assertEquals(-1L, deserialized.getPosition());
+    }
+
+    @Test
+    public void testSerializeDeserializeElementWithPosition() {
+        Element original = new Element("posKey", EType.STRING, "posValue", 12345L);
+        byte[] serialized = FileBTreeUtils.serializeElement(original);
+        Element deserialized = FileBTreeUtils.deserializeElement(serialized);
+
+        assertNotNull(deserialized);
+        assertEquals("posKey", deserialized.getName());
+        assertEquals(EType.STRING, deserialized.getType());
+        assertEquals("posValue", deserialized.getValue());
+        assertEquals(12345L, deserialized.getPosition());
     }
 
     @Test
@@ -72,6 +87,7 @@ public class FileBTreeUtilsTest {
         assertEquals("nullStringKey", deserialized.getName());
         assertEquals(EType.STRING, deserialized.getType());
         assertNull(deserialized.getValue());
+        assertEquals(-1L, deserialized.getPosition());
     }
 
     @Test
@@ -85,6 +101,7 @@ public class FileBTreeUtilsTest {
         assertEquals(EType.INTEGER, deserialized.getType());
         // null integer is serialized as 0
         assertEquals(0, deserialized.getValue());
+        assertEquals(-1L, deserialized.getPosition());
     }
 
     @Test
@@ -96,6 +113,7 @@ public class FileBTreeUtilsTest {
         assertNotNull(deserialized);
         assertEquals("ключ", deserialized.getName());
         assertEquals("значение", deserialized.getValue());
+        assertEquals(-1L, deserialized.getPosition());
     }
 
     @Test
@@ -116,6 +134,7 @@ public class FileBTreeUtilsTest {
             assertEquals(original.getName(), deserialized.getName());
             assertEquals(original.getType(), deserialized.getType());
             assertEquals(original.getValue(), deserialized.getValue());
+            assertEquals(original.getPosition(), deserialized.getPosition());
         }
     }
 

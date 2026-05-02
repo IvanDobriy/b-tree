@@ -52,6 +52,9 @@ public class FileBTreeUtils {
                 dos.writeInt(-1);
             }
 
+            // Write position
+            dos.writeLong(element.getPosition());
+
             dos.flush();
             return baos.toByteArray();
         } catch (IOException e) {
@@ -90,7 +93,10 @@ public class FileBTreeUtils {
                 value = dis.readInt();
             }
 
-            return new Element(name, type, value);
+            // Read position
+            long position = dis.readLong();
+
+            return new Element(name, type, value, position);
         } catch (IOException e) {
             throw new RuntimeException("Failed to deserialize Element", e);
         }
