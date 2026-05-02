@@ -6,6 +6,7 @@ public class Element {
     private String name;
     private EType type;
     private Object value;
+    private long position;
 
     public Element(String name, EType type, Object value) {
         Objects.requireNonNull(name);
@@ -14,6 +15,12 @@ public class Element {
         this.name = name;
         this.value = value;
         this.type = type;
+        this.position = -1;
+    }
+
+    public Element(String name, EType type, Object value, long position) {
+        this(name, type, value);
+        this.position = position;
     }
 
     public String getName() {
@@ -26,5 +33,9 @@ public class Element {
 
     public EType getType() {
         return type;
+    }
+
+    public long getPosition() {
+        return position;
     }
 }

@@ -34,9 +34,9 @@ public class FileBTree implements IBTree {
     }
 
     @Override
-    public long search(Element element) {
+    public Element search(Element element) {
         element = root.findByKey(element);
-        return null;
+        return element;
     }
 
     @Override
