@@ -1,5 +1,6 @@
 package ru.otus.btree.lib.v1.btree;
 
+import ru.otus.btree.lib.api.array.IArray;
 import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.IBTree;
 import ru.otus.btree.lib.api.btree.IEntity;
@@ -35,8 +36,11 @@ public class FileBTree implements IBTree {
 
     @Override
     public Element search(Element element) {
-        element = root.findByKey(element);
-        return element;
+        IArray<Element> bucket = root.findByKey(element);
+        if (bucket == null || bucket.size() == 0) {
+            return null;
+        }
+        return bucket.get(0);
     }
 
     @Override

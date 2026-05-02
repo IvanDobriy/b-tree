@@ -3,9 +3,11 @@ package ru.otus.btree.lib.v1.btree;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.io.TempDir;
+import ru.otus.btree.lib.api.array.IArray;
 import ru.otus.btree.lib.api.btree.EType;
 import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.IEntity;
+import ru.otus.btree.lib.v1.array.SingleArray;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -227,8 +229,15 @@ public class FileBTreeUtilsTest {
 
             PageManager pageManager = new PageManager(channel);
             FileBTreeNode original = new FileBTreeNode(1L, 3, true, channel, pageManager);
-            original.getKeys().add(original.getKeys().size(), new Element("key1", EType.STRING, "value1"));
-            original.getKeys().add(original.getKeys().size(), new Element("key2", EType.INTEGER, 42));
+
+            IArray<Element> bucket1 = new SingleArray<>(0);
+            bucket1.add(bucket1.size(), new Element("key1", EType.STRING, "value1"));
+            original.getKeys().add(original.getKeys().size(), bucket1);
+
+            IArray<Element> bucket2 = new SingleArray<>(0);
+            bucket2.add(bucket2.size(), new Element("key2", EType.INTEGER, 42));
+            original.getKeys().add(original.getKeys().size(), bucket2);
+
             original.getChildren().add(original.getChildren().size(), 2L);
             original.getChildren().add(original.getChildren().size(), 3L);
 
@@ -244,11 +253,11 @@ public class FileBTreeUtilsTest {
             assertEquals(2, deserialized.getKeys().size());
             assertEquals(2, deserialized.getChildren().size());
 
-            Element key1 = deserialized.getKeys().get(0);
+            Element key1 = deserialized.getKeys().get(0).get(0);
             assertEquals("key1", key1.getName());
             assertEquals("value1", key1.getValue());
 
-            Element key2 = deserialized.getKeys().get(1);
+            Element key2 = deserialized.getKeys().get(1).get(0);
             assertEquals("key2", key2.getName());
             assertEquals(42, key2.getValue());
 

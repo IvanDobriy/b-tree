@@ -15,7 +15,7 @@ public class FileBTreeNode {
 
     private long pageId;
     private final int degree;
-    private final IArray<Element> keys;
+    private final IArray<IArray<Element>> keys;
     private final IArray<Long> children;
     private boolean isLeaf;
     private FileChannel fileChannel;
@@ -135,7 +135,7 @@ public class FileBTreeNode {
         isLeaf = leaf;
     }
 
-    public IArray<Element> getKeys() {
+    public IArray<IArray<Element>> getKeys() {
         return keys;
     }
 
@@ -143,16 +143,16 @@ public class FileBTreeNode {
         return children;
     }
 
-    public Element findByKey(Element key) {
+    public IArray<Element> findByKey(Element key) {
         if (key == null) {
             return null;
         }
 
         // Search in current node's keys by comparing values based on type
         for (int i = 0; i < keys.size(); i++) {
-            Element currentKey = keys.get(i);
-            if (currentKey != null && compareElements(currentKey, key) == 0) {
-                return currentKey;
+            IArray<Element> bucket = keys.get(i);
+            if (bucket != null && bucket.size() > 0 && compareElements(bucket.get(0), key) == 0) {
+                return bucket;
             }
         }
 
@@ -217,7 +217,7 @@ public class FileBTreeNode {
             // Check if rebalancing is needed after insertion
             if (keys.size() > degree - 1) {
                 splitNode();
-            }else {
+            } else {
                 saveNode(this, fileChannel);
             }
         } else {
@@ -235,7 +235,7 @@ public class FileBTreeNode {
 
                 if (keys.size() > degree - 1) {
                     splitNode();
-                }else{
+                } else {
                     saveNode(this, fileChannel);
                 }
             }
@@ -245,8 +245,8 @@ public class FileBTreeNode {
     private int findChildIndex(Element key) {
         int childIndex = 0;
         for (int i = 0; i < keys.size(); i++) {
-            Element currentKey = keys.get(i);
-            if (currentKey != null && compareElements(key, currentKey) < 0) {
+            IArray<Element> bucket = keys.get(i);
+            if (bucket != null && bucket.size() > 0 && compareElements(key, bucket.get(0)) < 0) {
                 childIndex = i;
                 break;
             }
@@ -256,28 +256,44 @@ public class FileBTreeNode {
     }
 
     private int insertKeyIntoNode(Element key) {
+        // Check if a bucket with the same key already exists
+        for (int i = 0; i < keys.size(); i++) {
+            IArray<Element> bucket = keys.get(i);
+            if (bucket != null && bucket.size() > 0 && compareElements(key, bucket.get(0)) == 0) {
+                bucket.add(bucket.size(), key);
+                return i;
+            }
+        }
+
+        // Create a new bucket for this key
+        IArray<Element> bucket = new SingleArray<>(0);
+        bucket.add(0, key);
+        return insertBucketIntoNode(bucket);
+    }
+
+    private int insertBucketIntoNode(IArray<Element> bucket) {
         // Find the correct position by comparing from the end
-        // Shift elements to the right to make room for the new key
+        // Shift buckets to the right to make room for the new bucket
         int insertIndex = keys.size();
         for (int i = keys.size() - 1; i >= 0; i--) {
-            Element currentKey = keys.get(i);
-            if (currentKey != null && compareElements(key, currentKey) < 0) {
-                // Shift current element to the right
+            IArray<Element> currentBucket = keys.get(i);
+            if (currentBucket != null && currentBucket.size() > 0 && compareElements(bucket.get(0), currentBucket.get(0)) < 0) {
+                // Shift current bucket to the right
                 if (i + 1 < keys.size()) {
-                    keys.set(i + 1, currentKey);
+                    keys.set(i + 1, currentBucket);
                 } else {
-                    keys.add(keys.size(), currentKey);
+                    keys.add(keys.size(), currentBucket);
                 }
                 insertIndex = i;
             } else {
                 break;
             }
         }
-        // Insert the new key at the found position
+        // Insert the new bucket at the found position
         if (insertIndex < keys.size()) {
-            keys.set(insertIndex, key);
+            keys.set(insertIndex, bucket);
         } else {
-            keys.add(insertIndex, key);
+            keys.add(insertIndex, bucket);
         }
         return insertIndex;
     }
@@ -290,7 +306,7 @@ public class FileBTreeNode {
 
         // Find median index
         int medianIndex = keys.size() / 2;
-        Element medianKey = keys.get(medianIndex);
+        IArray<Element> medianBucket = keys.get(medianIndex);
 
         // Create new right sibling node using PageManager to allocate page
         long newPageId = pageManager.allocatePage();
@@ -322,19 +338,19 @@ public class FileBTreeNode {
         // Save the right sibling
         saveNode(rightSibling, fileChannel);
 
-        // Promote medianKey to parent (or create new root if this is root)
-        promoteToParent(medianKey, newPageId);
+        // Promote medianBucket to parent (or create new root if this is root)
+        promoteToParent(medianBucket, newPageId);
 
         // Save this node
         saveNode(this, fileChannel);
     }
 
-    private void promoteToParent(Element medianKey, long rightSiblingPageId) {
+    private void promoteToParent(IArray<Element> medianBucket, long rightSiblingPageId) {
         if (parentPageId == -1) {
             // This is the root node, create a new root
             long newRootPageId = 0; // Root is always at page 0
             FileBTreeNode newRoot = new FileBTreeNode(newRootPageId, degree, false, fileChannel, pageManager, this.onRootChanged);
-            newRoot.getKeys().add(0, medianKey);
+            newRoot.getKeys().add(0, medianBucket);
 
             // Current node needs a new pageId since root now occupies page 0
             long newPageId = pageManager.allocatePage();
@@ -357,11 +373,11 @@ public class FileBTreeNode {
                 onRootChanged.execute(newRoot);
             }
         } else {
-            // Load parent and insert median key
+            // Load parent and insert median bucket
             FileBTreeNode parent = loadNode(parentPageId, fileChannel, pageManager, this.onRootChanged);
 
-            // Insert median key into parent using insertKeyIntoNode
-            int keyInsertIndex = parent.insertKeyIntoNode(medianKey);
+            // Insert median bucket into parent using insertBucketIntoNode
+            int keyInsertIndex = parent.insertBucketIntoNode(medianBucket);
 
             // Add right sibling as child after the inserted key
             int childInsertIndex = keyInsertIndex + 1;

@@ -183,14 +183,18 @@ public class FileBTreeUtils {
             dos.writeBoolean(node.isLeaf());
             dos.writeLong(node.getParentPageId());
 
-            // Write keys
-            IArray<Element> keys = node.getKeys();
+            // Write keys (buckets)
+            IArray<IArray<Element>> keys = node.getKeys();
             dos.writeInt(keys.size());
             for (int i = 0; i < keys.size(); i++) {
-                Element key = keys.get(i);
-                byte[] keyData = serializeElement(key);
-                dos.writeInt(keyData.length);
-                dos.write(keyData);
+                IArray<Element> bucket = keys.get(i);
+                dos.writeInt(bucket.size());
+                for (int j = 0; j < bucket.size(); j++) {
+                    Element key = bucket.get(j);
+                    byte[] keyData = serializeElement(key);
+                    dos.writeInt(keyData.length);
+                    dos.write(keyData);
+                }
             }
 
             // Write children
@@ -225,15 +229,22 @@ public class FileBTreeUtils {
             FileBTreeNode node = new FileBTreeNode(pageId, degree, isLeaf, fileChannel, pageManager);
             node.setParentPageId(parentPageId);
 
-            // Read keys
+            // Read keys (buckets)
             int keyCount = dis.readInt();
             for (int i = 0; i < keyCount; i++) {
-                int keyLength = dis.readInt();
-                byte[] keyData = new byte[keyLength];
-                dis.readFully(keyData);
-                Element key = deserializeElement(keyData);
-                if (key != null) {
-                    node.getKeys().add(node.getKeys().size(), key);
+                int bucketSize = dis.readInt();
+                IArray<Element> bucket = new SingleArray<>(0);
+                for (int j = 0; j < bucketSize; j++) {
+                    int keyLength = dis.readInt();
+                    byte[] keyData = new byte[keyLength];
+                    dis.readFully(keyData);
+                    Element key = deserializeElement(keyData);
+                    if (key != null) {
+                        bucket.add(bucket.size(), key);
+                    }
+                }
+                if (bucket.size() > 0) {
+                    node.getKeys().add(node.getKeys().size(), bucket);
                 }
             }
 

@@ -3,8 +3,10 @@ package ru.otus.btree.lib.v1.btree;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.io.TempDir;
+import ru.otus.btree.lib.api.array.IArray;
 import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.EType;
+import ru.otus.btree.lib.v1.array.SingleArray;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -103,12 +105,17 @@ public class FileBTreeNodeTest {
             Element key1 = new Element("key1", EType.STRING, "value1");
             Element key2 = new Element("key2", EType.INTEGER, 42);
 
-            node.getKeys().add(node.getKeys().size(), key1);
-            node.getKeys().add(node.getKeys().size(), key2);
+            IArray<Element> bucket1 = new SingleArray<>(0);
+            bucket1.add(bucket1.size(), key1);
+            node.getKeys().add(node.getKeys().size(), bucket1);
+
+            IArray<Element> bucket2 = new SingleArray<>(0);
+            bucket2.add(bucket2.size(), key2);
+            node.getKeys().add(node.getKeys().size(), bucket2);
 
             assertEquals(2, node.getKeys().size());
-            assertEquals("key1", node.getKeys().get(0).getName());
-            assertEquals("key2", node.getKeys().get(1).getName());
+            assertEquals("key1", node.getKeys().get(0).get(0).getName());
+            assertEquals("key2", node.getKeys().get(1).get(0).getName());
         }
     }
 
@@ -202,9 +209,9 @@ public class FileBTreeNodeTest {
             node.insertByKey(keyC);
 
             assertEquals(3, node.getKeys().size());
-            assertEquals("A", node.getKeys().get(0).getValue());
-            assertEquals("B", node.getKeys().get(1).getValue());
-            assertEquals("C", node.getKeys().get(2).getValue());
+            assertEquals("A", node.getKeys().get(0).get(0).getValue());
+            assertEquals("B", node.getKeys().get(1).get(0).getValue());
+            assertEquals("C", node.getKeys().get(2).get(0).getValue());
         }
     }
 
@@ -288,12 +295,97 @@ public class FileBTreeNodeTest {
             for (int i = 0; i < 1000; i++) {
                 node.get().insertByKey(new Element("key", EType.INTEGER,  i));
             }
-            
+
             for (int i = 0; i < 1000; i++) {
-                Element found = node.get().findByKey(new Element("key", EType.INTEGER,  i));
+                IArray<Element> found = node.get().findByKey(new Element("key", EType.INTEGER,  i));
                 assertNotNull(found, "Should find value" + i);
             }
         }
     }
 
+
+    @Test
+    public void testSplitNodePreservesKeyOrderWithManyElementsElementTypeIntegerWithRepeatedKeys() throws Exception {
+        File pageTempFile = tempDir.resolve("page-manager-split-order-many-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-split-order-many-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()
+        ) {
+            PageManager pageManager = new PageManager(pageChannel);
+            long page = pageManager.allocatePage();
+            AtomicReference<FileBTreeNode> node = new AtomicReference<>();
+
+            node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, node::set));
+
+            for (int i = 0; i < 1000; i++) {
+                node.get().insertByKey(new Element("key", EType.INTEGER,  i));
+            }
+
+            for (int i = 0; i < 100; i++) {
+                node.get().insertByKey(new Element("key", EType.INTEGER,  i));
+            }
+
+            for (int i = 0; i < 1000; i++) {
+                IArray<Element> found = node.get().findByKey(new Element("key", EType.INTEGER,  i));
+                assertNotNull(found, "Should find value" + i);
+            }
+        }
+    }
+
+    @Test
+    public void testInsertDuplicateKeysIntoSameBucket() throws Exception {
+        File pageTempFile = tempDir.resolve("page-manager-dup-bucket-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-dup-bucket-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
+
+            PageManager pageManager = new PageManager(pageChannel);
+            FileBTreeNode node = new FileBTreeNode(0L, 5, true, nodeChannel, pageManager);
+
+            Element dup1 = new Element("key", EType.STRING, "A", 100L);
+            Element dup2 = new Element("key", EType.STRING, "A", 200L);
+            Element dup3 = new Element("key", EType.STRING, "A", 300L);
+
+            node.insertByKey(dup1);
+            node.insertByKey(dup2);
+            node.insertByKey(dup3);
+
+            assertEquals(1, node.getKeys().size(), "All duplicates should be stored in a single bucket");
+            assertEquals(3, node.getKeys().get(0).size(), "Bucket should contain 3 elements");
+            assertEquals(100L, node.getKeys().get(0).get(0).getPosition());
+            assertEquals(200L, node.getKeys().get(0).get(1).getPosition());
+            assertEquals(300L, node.getKeys().get(0).get(2).getPosition());
+        }
+    }
+
+    @Test
+    public void testBucketSplitWithDuplicates() throws Exception {
+        File pageTempFile = tempDir.resolve("page-manager-dup-split-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-dup-split-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
+
+            PageManager pageManager = new PageManager(pageChannel);
+            long page = pageManager.allocatePage();
+            AtomicReference<FileBTreeNode> nodeRef = new AtomicReference<>();
+            nodeRef.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, (root) -> {
+                nodeRef.set(root);
+            }));
+
+            // degree=3 => max 2 buckets before split
+            nodeRef.get().insertByKey(new Element("k", EType.STRING, "A"));
+            nodeRef.get().insertByKey(new Element("k", EType.STRING, "B"));
+            nodeRef.get().insertByKey(new Element("k", EType.STRING, "C"));
+
+            assertNotNull(nodeRef.get().findByKey(new Element("k", EType.STRING, "A")));
+            assertNotNull(nodeRef.get().findByKey(new Element("k", EType.STRING, "B")));
+            assertNotNull(nodeRef.get().findByKey(new Element("k", EType.STRING, "C")));
+        }
+    }
 }

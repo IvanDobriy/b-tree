@@ -72,11 +72,7 @@ Standard Maven/Gradle directory layout is used:
 
 ### Known Build Issues
 
-As of the latest source state, the project **does not compile**:
-- `lib/v1/src/main/java/ru/otus/btree/lib/v1/btree/FileBTree.java:39`  
-  `return null;` is used in `search(Element)`, which is declared to return `long` in `IBTree`.
-
-To fix it, change the return type or return value in `FileBTree.search` so that primitive `long` is handled correctly.
+None — the project compiles successfully.
 
 ## Architecture and Design
 
@@ -89,7 +85,8 @@ The core implementation (`lib:v1`) stores a B-tree on disk using two `FileChanne
 - **Page size**: 4096 bytes (`PAGE_SIZE` constant)
 - **Node serialization**: custom binary format via `FileBTreeUtils`
   - `Element` → `(nameLength, nameBytes, typeCode, valueLength/valueBytes/valueInt)`
-  - `FileBTreeNode` → `(pageId, degree, isLeaf, parentPageId, keyCount, [keys...], childCount, [children...])`
+  - `FileBTreeNode` → `(pageId, degree, isLeaf, parentPageId, keyCount, [buckets...], childCount, [children...])`
+    - each **bucket** = `(bucketSize, [Element...])` storing all values with the same key (duplicates support)
 - **Root tracking**: root is expected at page ID 0; `IOnRootChanged` callback updates the in-memory root reference
 
 ### Data Structures Implemented from Scratch
@@ -147,7 +144,6 @@ Reports are generated under `<module>/build/reports/tests/test/index.html`.
 1. **Empty modules**: `domain` and `data` have no Java source files. They are placeholders for future expansion.
 2. **Unimplemented features**:
    - `FileBTree.delete(...)` throws `RuntimeException("not yet implemented")`.
-   - `FileBTree.search(...)` has the compilation bug mentioned above.
    - `Entity.toArray()` returns `null`.
 3. **Page management**: `PageManager` reuses deleted pages when available; otherwise it appends new pages at the end of the file. `PageManagerList` handles reading/writing across 4096-byte page boundaries.
 4. **Modifying the B-tree**: Any change to node structure or serialization must be reflected in `FileBTreeUtils` and corresponding tests.
