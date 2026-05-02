@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -251,17 +252,21 @@ public class FileBTreeNodeTest {
         ) {
             PageManager pageManager = new PageManager(pageChannel);
             long page = pageManager.allocatePage();
-            FileBTreeNode node = new FileBTreeNode(page, 3, true, nodeChannel, pageManager);
+            AtomicReference<FileBTreeNode> node = new AtomicReference<>();
 
-            node.insertByKey(new Element("key", EType.STRING, "D"));
-            node.insertByKey(new Element("key", EType.STRING, "B"));
-            node.insertByKey(new Element("key", EType.STRING, "A"));
-            node.insertByKey(new Element("key", EType.STRING, "C"));
+            node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, (root)-> {
+                node.set(root);
+            }));
 
-            assertNotNull(node.findByKey(new Element("key", EType.STRING, "A")));
-            assertNotNull(node.findByKey(new Element("key", EType.STRING, "B")));
-            assertNotNull(node.findByKey(new Element("key", EType.STRING, "C")));
-            assertNotNull(node.findByKey(new Element("key", EType.STRING, "D")));
+            node.get().insertByKey(new Element("key", EType.STRING, "D"));
+            node.get().insertByKey(new Element("key", EType.STRING, "B"));
+            node.get().insertByKey(new Element("key", EType.STRING, "A"));
+            node.get().insertByKey(new Element("key", EType.STRING, "C"));
+
+            assertNotNull(node.get().findByKey(new Element("key", EType.STRING, "A")));
+            assertNotNull(node.get().findByKey(new Element("key", EType.STRING, "B")));
+            assertNotNull(node.get().findByKey(new Element("key", EType.STRING, "C")));
+            assertNotNull(node.get().findByKey(new Element("key", EType.STRING, "D")));
         }
     }
 
