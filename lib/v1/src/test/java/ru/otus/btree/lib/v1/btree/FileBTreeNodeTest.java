@@ -521,6 +521,51 @@ public class FileBTreeNodeTest {
     }
 
     @Test
+    public void testInsert1000AndDelete200() throws Exception {
+        File pageTempFile = tempDir.resolve("page-manager-insert-delete-many-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-insert-delete-many-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
+
+            PageManager pageManager = new PageManager(pageChannel);
+            long page = pageManager.allocatePage();
+            AtomicReference<FileBTreeNode> node = new AtomicReference<>();
+
+            node.set(new FileBTreeNode(page, 5, true, nodeChannel, pageManager, node::set));
+
+            // Insert 1000 elements
+            for (int i = 0; i < 1000; i++) {
+                node.get().insertByKey(new Element("key", EType.INTEGER, i));
+            }
+
+
+            node.set(FileBTreeNode.loadNode(0, nodeChannel, pageManager, node::set));
+            // Delete 200 elements (even numbers from 0 to 398)
+            for (int i = 0; i < 200; i++) {
+                node.get().deleteByKey(new Element("key", EType.INTEGER, i * 2));
+            }
+
+            node.set(FileBTreeNode.loadNode(0, nodeChannel, pageManager, node::set));
+            // Verify deleted elements are gone
+            for (int i = 0; i < 200; i++) {
+                assertNull(node.get().findByKey(new Element("key", EType.INTEGER, i * 2)),
+                        "Deleted key " + (i * 2) + " should not be found");
+            }
+
+            node.set(FileBTreeNode.loadNode(0, nodeChannel, pageManager, node::set));
+            // Verify remaining elements exist
+            for (int i = 0; i < 1000; i++) {
+                if (i % 2 != 0 || i >= 400) {
+                    assertNotNull(node.get().findByKey(new Element("key", EType.INTEGER, i)),
+                            "Key " + i + " should still exist");
+                }
+            }
+        }
+    }
+
+    @Test
     public void testBucketSplitWithDuplicates() throws Exception {
         File pageTempFile = tempDir.resolve("page-manager-dup-split-test.tmp").toFile();
         File nodeTempFile = tempDir.resolve("node-dup-split-test.tmp").toFile();
