@@ -143,6 +143,51 @@ public class FileBTreeNode {
         return children;
     }
 
+    public String visualize() {
+        StringBuilder sb = new StringBuilder();
+        visualize(sb, 0);
+        return sb.toString();
+    }
+
+    private void visualize(StringBuilder sb, int depth) {
+        String indent = "  ".repeat(depth);
+        sb.append(indent).append("Node[pageId=").append(pageId)
+          .append(", leaf=").append(isLeaf)
+          .append(", parent=").append(parentPageId).append("]\n");
+
+        sb.append(indent).append("  keys: [");
+        for (int i = 0; i < keys.size(); i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(bucketToString(keys.get(i)));
+        }
+        sb.append("]\n");
+
+        if (!isLeaf && children.size() > 0) {
+            sb.append(indent).append("  children:\n");
+            for (int i = 0; i < children.size(); i++) {
+                Long childPageId = children.get(i);
+                if (childPageId != null) {
+                    FileBTreeNode child = loadNode(childPageId, fileChannel, pageManager, onRootChanged);
+                    child.visualize(sb, depth + 1);
+                }
+            }
+        }
+    }
+
+    private String bucketToString(IArray<Element> bucket) {
+        if (bucket == null || bucket.size() == 0) {
+            return "null";
+        }
+        Element first = bucket.get(0);
+        String valueStr = first.getValue() != null ? first.getValue().toString() : "null";
+        if (bucket.size() > 1) {
+            return valueStr + "(×" + bucket.size() + ")";
+        }
+        return valueStr;
+    }
+
     public IArray<Element> findByKey(Element key) {
         if (key == null) {
             return null;
