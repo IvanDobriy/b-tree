@@ -310,6 +310,51 @@ public class FileBTreeNode {
         }
     }
 
+    public void deleteByKey(Element key) {
+        Objects.requireNonNull(key, "key must not be null");
+        if (isLeaf) {
+            removeKeyFromNode(key);
+            saveNode(this, fileChannel);
+        } else {
+            int keyIndex = -1;
+            for (int i = 0; i < keys.size(); i++) {
+                IArray<Element> bucket = keys.get(i);
+                if (bucket != null && bucket.size() > 0 && compareElements(bucket.get(0), key) == 0) {
+                    keyIndex = i;
+                    break;
+                }
+            }
+            if (keyIndex >= 0) {
+                // Replace with predecessor (max key from left child subtree)
+                Long leftChildPageId = children.get(keyIndex);
+                FileBTreeNode predecessorNode = loadNode(leftChildPageId, fileChannel, pageManager, this.onRootChanged);
+                while (!predecessorNode.isLeaf()) {
+                    int lastChildIndex = predecessorNode.getChildren().size() - 1;
+                    Long lastChildPageId = predecessorNode.getChildren().get(lastChildIndex);
+                    predecessorNode = loadNode(lastChildPageId, fileChannel, pageManager, this.onRootChanged);
+                }
+                IArray<Element> predecessorBucket = predecessorNode.getKeys().get(predecessorNode.getKeys().size() - 1);
+                // Copy bucket to avoid shared reference
+                IArray<Element> newBucket = new SingleArray<>(0);
+                for (int i = 0; i < predecessorBucket.size(); i++) {
+                    newBucket.add(i, predecessorBucket.get(i));
+                }
+                keys.set(keyIndex, newBucket);
+                saveNode(this, fileChannel);
+                // Remove predecessor from leaf
+                predecessorNode.removeKeyFromNode(predecessorBucket.get(0));
+                saveNode(predecessorNode, fileChannel);
+            } else {
+                int childIndex = findChildIndex(key);
+                if (childIndex < children.size()) {
+                    Long childPageId = children.get(childIndex);
+                    FileBTreeNode childNode = loadNode(childPageId, fileChannel, pageManager, this.onRootChanged);
+                    childNode.deleteByKey(key);
+                }
+            }
+        }
+    }
+
     private int findChildIndex(Element key) {
         int childIndex = 0;
         for (int i = 0; i < keys.size(); i++) {
@@ -321,6 +366,25 @@ public class FileBTreeNode {
             childIndex = i + 1;
         }
         return childIndex;
+    }
+
+    private int removeKeyFromNode(Element key) {
+        for (int i = 0; i < keys.size(); i++) {
+            IArray<Element> bucket = keys.get(i);
+            if (bucket != null && bucket.size() > 0 && compareElements(key, bucket.get(0)) == 0) {
+                for (int j = 0; j < bucket.size(); j++) {
+                    if (compareElements(bucket.get(j), key) == 0) {
+                        bucket.remove(j);
+                        break;
+                    }
+                }
+                if (bucket.size() == 0) {
+                    keys.remove(i);
+                }
+                return i;
+            }
+        }
+        return -1; // Key not found
     }
 
     private int insertKeyIntoNode(Element key) {

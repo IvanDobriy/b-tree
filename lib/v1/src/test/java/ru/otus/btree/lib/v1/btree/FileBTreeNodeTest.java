@@ -464,6 +464,63 @@ public class FileBTreeNodeTest {
     }
 
     @Test
+    public void testDeleteByKeyFromLeaf() throws Exception {
+        File pageTempFile = tempDir.resolve("page-manager-delete-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-delete-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
+
+            PageManager pageManager = new PageManager(pageChannel);
+            FileBTreeNode node = new FileBTreeNode(0L, 5, true, nodeChannel, pageManager);
+
+            Element keyA = new Element("key", EType.STRING, "A");
+            Element keyB = new Element("key", EType.STRING, "B");
+            Element keyC = new Element("key", EType.STRING, "C");
+
+            node.insertByKey(keyA);
+            node.insertByKey(keyB);
+            node.insertByKey(keyC);
+
+            assertNotNull(node.findByKey(keyB));
+            node.deleteByKey(keyB);
+            assertNull(node.findByKey(keyB), "Key B should be deleted");
+            assertNotNull(node.findByKey(keyA), "Key A should still exist");
+            assertNotNull(node.findByKey(keyC), "Key C should still exist");
+        }
+    }
+
+    @Test
+    public void testDeleteByKeyFromInternalNode() throws Exception {
+        File pageTempFile = tempDir.resolve("page-manager-delete-internal-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-delete-internal-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
+
+            PageManager pageManager = new PageManager(pageChannel);
+            long page = pageManager.allocatePage();
+            AtomicReference<FileBTreeNode> node = new AtomicReference<>();
+
+            node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, node::set));
+
+            node.get().insertByKey(new Element("key", EType.STRING, "B"));
+            node.get().insertByKey(new Element("key", EType.STRING, "A"));
+            node.get().insertByKey(new Element("key", EType.STRING, "C"));
+
+            FileBTreeNode root = node.get();
+            assertNotNull(root.findByKey(new Element("key", EType.STRING, "B")));
+
+            root.deleteByKey(new Element("key", EType.STRING, "B"));
+            assertNull(root.findByKey(new Element("key", EType.STRING, "B")), "Key B should be deleted");
+            assertNotNull(root.findByKey(new Element("key", EType.STRING, "A")), "Key A should still exist");
+            assertNotNull(root.findByKey(new Element("key", EType.STRING, "C")), "Key C should still exist");
+        }
+    }
+
+    @Test
     public void testBucketSplitWithDuplicates() throws Exception {
         File pageTempFile = tempDir.resolve("page-manager-dup-split-test.tmp").toFile();
         File nodeTempFile = tempDir.resolve("node-dup-split-test.tmp").toFile();
