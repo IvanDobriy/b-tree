@@ -1,10 +1,12 @@
 package ru.otus.btree.lib.api.btree;
 
 
-public interface IBTree<V> {
-    void insert(String keyName, IEntity entity, long position);
+import ru.otus.btree.lib.api.array.IArray;
 
-    Element search(Element element);
+public interface IBTree<V> {
+    void insert(String keyName, IEntity entity);
+
+    IArray<Element> search(Element element);
 
     void delete(Element element);
 }

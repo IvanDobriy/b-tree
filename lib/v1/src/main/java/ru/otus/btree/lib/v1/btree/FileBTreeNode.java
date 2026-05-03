@@ -312,7 +312,8 @@ public class FileBTreeNode {
 
     public void deleteByKey(Element key) {
         Objects.requireNonNull(key, "key must not be null");
-        if (isLeaf) {
+        // Treat node as leaf if it has no children (can happen with root created as internal node)
+        if (isLeaf || children.size() == 0) {
             removeKeyFromNode(key);
             saveNode(this, fileChannel);
         } else {
@@ -328,22 +329,28 @@ public class FileBTreeNode {
                 // Replace with predecessor (max key from left child subtree)
                 Long leftChildPageId = children.get(keyIndex);
                 FileBTreeNode predecessorNode = loadNode(leftChildPageId, fileChannel, pageManager, this.onRootChanged);
-                while (!predecessorNode.isLeaf()) {
+                while (!predecessorNode.isLeaf() && predecessorNode.getChildren().size() > 0) {
                     int lastChildIndex = predecessorNode.getChildren().size() - 1;
                     Long lastChildPageId = predecessorNode.getChildren().get(lastChildIndex);
                     predecessorNode = loadNode(lastChildPageId, fileChannel, pageManager, this.onRootChanged);
                 }
-                IArray<Element> predecessorBucket = predecessorNode.getKeys().get(predecessorNode.getKeys().size() - 1);
-                // Copy bucket to avoid shared reference
-                IArray<Element> newBucket = new SingleArray<>(0);
-                for (int i = 0; i < predecessorBucket.size(); i++) {
-                    newBucket.add(i, predecessorBucket.get(i));
+                if (predecessorNode.getKeys().size() > 0) {
+                    IArray<Element> predecessorBucket = predecessorNode.getKeys().get(predecessorNode.getKeys().size() - 1);
+                    // Copy bucket to avoid shared reference
+                    IArray<Element> newBucket = new SingleArray<>(0);
+                    for (int i = 0; i < predecessorBucket.size(); i++) {
+                        newBucket.add(i, predecessorBucket.get(i));
+                    }
+                    keys.set(keyIndex, newBucket);
+                    saveNode(this, fileChannel);
+                    // Remove predecessor from leaf
+                    predecessorNode.removeKeyFromNode(predecessorBucket.get(0));
+                    saveNode(predecessorNode, fileChannel);
+                } else {
+                    // No predecessor available, remove bucket directly
+                    keys.remove(keyIndex);
+                    saveNode(this, fileChannel);
                 }
-                keys.set(keyIndex, newBucket);
-                saveNode(this, fileChannel);
-                // Remove predecessor from leaf
-                predecessorNode.removeKeyFromNode(predecessorBucket.get(0));
-                saveNode(predecessorNode, fileChannel);
             } else {
                 int childIndex = findChildIndex(key);
                 if (childIndex < children.size()) {

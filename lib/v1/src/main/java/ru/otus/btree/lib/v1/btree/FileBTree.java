@@ -30,23 +30,22 @@ public class FileBTree implements IBTree {
     }
 
     @Override
-    public void insert(String keyName, IEntity entity, long position) {
+    public void insert(String keyName, IEntity entity) {
         root.insertByKey(entity.get(keyName));
     }
 
     @Override
-    public Element search(Element element) {
+    public IArray<Element> search(Element element) {
         IArray<Element> bucket = root.findByKey(element);
         if (bucket == null || bucket.size() == 0) {
             return null;
         }
-        return bucket.get(0);
+        return bucket;
     }
 
     @Override
     public void delete(Element element) {
-        // TODO: Implement delete
-        throw new RuntimeException("not yet implemented");
+        root.deleteByKey(element);
     }
 
     public FileBTreeNode getRoot() {
