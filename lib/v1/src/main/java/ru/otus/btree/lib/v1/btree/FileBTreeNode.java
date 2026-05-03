@@ -312,7 +312,6 @@ public class FileBTreeNode {
                 Long childPageId = children.get(childIndex);
                 FileBTreeNode childNode = loadNode(childPageId, fileChannel, pageManager, this.onRootChanged);
                 childNode.insertByKey(key);
-                saveNode(childNode, fileChannel);
             } else {
                 // If no valid child, insert into current node
                 insertKeyIntoNode(key);
@@ -392,10 +391,14 @@ public class FileBTreeNode {
         int medianIndex = keys.size() / 2;
         IArray<Element> medianBucket = keys.get(medianIndex);
 
+        // Determine actual parent via tree search to avoid stale parentPageId
+        FileBTreeNode actualParent = this.findParentByTreeSearch();
+        long actualParentPageId = actualParent != null ? actualParent.getPageId() : -1;
+
         // Create new right sibling node using PageManager to allocate page
         long newPageId = pageManager.allocatePage();
         FileBTreeNode rightSibling = new FileBTreeNode(newPageId, degree, isLeaf, fileChannel, pageManager, this.onRootChanged);
-        rightSibling.setParentPageId(parentPageId);
+        rightSibling.setParentPageId(actualParentPageId);
 
         // Move keys after median to right sibling
         for (int i = medianIndex + 1; i < keys.size(); i++) {
@@ -418,19 +421,16 @@ public class FileBTreeNode {
         for (int i = keys.size() - 1; i >= medianIndex; i--) {
             keys.remove(i);
         }
-
         // Save the right sibling
         saveNode(rightSibling, fileChannel);
-
+        saveNode(this, fileChannel);
         // Promote medianBucket to parent (or create new root if this is root)
         promoteToParent(medianBucket, newPageId);
-
-        // Save this node
-        saveNode(this, fileChannel);
     }
 
     private void promoteToParent(IArray<Element> medianBucket, long rightSiblingPageId) {
-        if (parentPageId == -1) {
+        FileBTreeNode parent = this.findParentByTreeSearch();
+        if (parent == null) {
             // This is the root node, create a new root
             long newRootPageId = 0; // Root is always at page 0
             FileBTreeNode newRoot = new FileBTreeNode(newRootPageId, degree, false, fileChannel, pageManager, this.onRootChanged);
@@ -441,15 +441,9 @@ public class FileBTreeNode {
             newRoot.getChildren().add(0, newPageId);
             newRoot.getChildren().add(1, rightSiblingPageId);
 
-            // Update parent references and pageId
-            this.parentPageId = newRootPageId;
+            // Update pageId
             this.pageId = newPageId;
             saveNode(this, fileChannel);
-
-            // Save right sibling with updated parent
-            FileBTreeNode rightSibling = loadNode(rightSiblingPageId, fileChannel, pageManager, this.onRootChanged);
-            rightSibling.setParentPageId(newRootPageId);
-            saveNode(rightSibling, fileChannel);
 
             // Save the new root
             saveNode(newRoot, fileChannel);
@@ -457,9 +451,6 @@ public class FileBTreeNode {
                 onRootChanged.execute(newRoot);
             }
         } else {
-            // Load parent and insert median bucket
-            FileBTreeNode parent = loadNode(parentPageId, fileChannel, pageManager, this.onRootChanged);
-
             // Insert median bucket into parent using insertBucketIntoNode
             int keyInsertIndex = parent.insertBucketIntoNode(medianBucket);
 
@@ -470,7 +461,7 @@ public class FileBTreeNode {
             // Save parent
             saveNode(parent, fileChannel);
 
-            if (parentPageId == 0 && onRootChanged != null) {
+            if (parent.getPageId() == 0 && onRootChanged != null) {
                 onRootChanged.execute(parent);
             }
 
