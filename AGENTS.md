@@ -85,7 +85,7 @@ The core implementation (`lib:v1`) stores a B-tree on disk using two `FileChanne
 - **Page size**: 4096 bytes (`PAGE_SIZE` constant)
 - **Node serialization**: custom binary format via `FileBTreeUtils`
   - `Element` → `(nameLength, nameBytes, typeCode, valueLength/valueBytes/valueInt)`
-  - `FileBTreeNode` → `(pageId, degree, isLeaf, parentPageId, keyCount, [buckets...], childCount, [children...])`
+  - `FileBTreeNode` → `(pageId, degree, isLeaf, keyCount, [buckets...], childCount, [children...])`
     - each **bucket** = `(bucketSize, [Element...])` storing all values with the same key (duplicates support)
 - **Root tracking**: root is expected at page ID 0; `IOnRootChanged` callback updates the in-memory root reference
 

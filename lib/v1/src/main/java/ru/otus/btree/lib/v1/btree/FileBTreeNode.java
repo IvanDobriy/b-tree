@@ -19,7 +19,6 @@ public class FileBTreeNode {
     private final IArray<Long> children;
     private boolean isLeaf;
     private FileChannel fileChannel;
-    private long parentPageId; // -1 means no parent (root node)
     private PageManager pageManager; // Page allocation manager
     private IOnRootChanged onRootChanged;
 
@@ -89,7 +88,6 @@ public class FileBTreeNode {
         this.isLeaf = isLeaf;
         this.keys = new SingleArray<>(0);
         this.children = new SingleArray<>(0);
-        this.parentPageId = -1; // No parent by default (root node)
         this.onRootChanged = null;
     }
 
@@ -113,15 +111,6 @@ public class FileBTreeNode {
     public void setPageId(long pageId) {
         this.pageId = pageId;
     }
-
-    public long getParentPageId() {
-        return parentPageId;
-    }
-
-    public void setParentPageId(long parentPageId) {
-        this.parentPageId = parentPageId;
-    }
-
 
     public int getDegree() {
         return degree;
@@ -152,8 +141,7 @@ public class FileBTreeNode {
     private void visualize(StringBuilder sb, int depth) {
         String indent = "  ".repeat(depth);
         sb.append(indent).append("Node[pageId=").append(pageId)
-          .append(", leaf=").append(isLeaf)
-          .append(", parent=").append(parentPageId).append("]\n");
+          .append(", leaf=").append(isLeaf).append("]\n");
 
         sb.append(indent).append("  keys: [");
         for (int i = 0; i < keys.size(); i++) {
@@ -190,7 +178,6 @@ public class FileBTreeNode {
 
     /**
      * Finds the parent of this node by traversing the tree from the root.
-     * Does not rely on parentPageId, which may be stale.
      *
      * @return the parent node, or null if this node is the root
      */
@@ -391,14 +378,9 @@ public class FileBTreeNode {
         int medianIndex = keys.size() / 2;
         IArray<Element> medianBucket = keys.get(medianIndex);
 
-        // Determine actual parent via tree search to avoid stale parentPageId
-        FileBTreeNode actualParent = this.findParentByTreeSearch();
-        long actualParentPageId = actualParent != null ? actualParent.getPageId() : -1;
-
         // Create new right sibling node using PageManager to allocate page
         long newPageId = pageManager.allocatePage();
         FileBTreeNode rightSibling = new FileBTreeNode(newPageId, degree, isLeaf, fileChannel, pageManager, this.onRootChanged);
-        rightSibling.setParentPageId(actualParentPageId);
 
         // Move keys after median to right sibling
         for (int i = medianIndex + 1; i < keys.size(); i++) {

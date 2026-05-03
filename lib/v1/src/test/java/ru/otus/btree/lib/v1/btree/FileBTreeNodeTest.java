@@ -42,7 +42,6 @@ public class FileBTreeNodeTest {
             assertTrue(node.isLeaf());
             assertEquals(0, node.getKeys().size());
             assertEquals(0, node.getChildren().size());
-            assertEquals(-1L, node.getParentPageId());
         }
     }
 
@@ -51,25 +50,6 @@ public class FileBTreeNodeTest {
         assertThrows(NullPointerException.class, () -> {
             new FileBTreeNode(1L, 3, true, null, null);
         });
-    }
-
-    @Test
-    public void testParentPageId() throws Exception {
-        File pageTempFile = tempDir.resolve("page-manager-parent-test.tmp").toFile();
-        File nodeTempFile = tempDir.resolve("node-parent-test.tmp").toFile();
-        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
-             FileChannel pageChannel = pageRaf.getChannel();
-             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
-             FileChannel nodeChannel = nodeRaf.getChannel()) {
-
-            PageManager pageManager = new PageManager(pageChannel);
-            FileBTreeNode node = new FileBTreeNode(1L, 3, true, nodeChannel, pageManager);
-
-            assertEquals(-1L, node.getParentPageId());
-
-            node.setParentPageId(5L);
-            assertEquals(5L, node.getParentPageId());
-        }
     }
 
     @Test
