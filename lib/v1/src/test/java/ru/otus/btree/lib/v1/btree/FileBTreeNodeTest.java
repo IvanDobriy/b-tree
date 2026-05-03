@@ -295,13 +295,39 @@ public class FileBTreeNodeTest {
 
             node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, node::set));
 
-            for (int i = 0; i < 20; i++) {
+            for (int i = 0; i < 1000; i++) {
                 node.get().insertByKey(new Element("key", EType.INTEGER, i));
             }
-            logger.info(node.get().visualize());
-
-            for (int i = 0; i < 20; i++) {
+            node.set(FileBTreeNode.loadNode(0, nodeChannel, pageManager, null));
+            for (int i = 0; i < 1000; i++) {
                 IArray<Element> found = node.get().findByKey(new Element("key", EType.INTEGER, i));
+                assertNotNull(found, "Should find value" + i);
+            }
+        }
+    }
+
+
+    @Test
+    public void testSplitNodePreservesKeyOrderWithManyElementsElementTypeString() throws Exception {
+        File pageTempFile = tempDir.resolve("page-manager-split-order-many-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-split-order-many-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()
+        ) {
+            PageManager pageManager = new PageManager(pageChannel);
+            long page = pageManager.allocatePage();
+            AtomicReference<FileBTreeNode> node = new AtomicReference<>();
+
+            node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, node::set));
+
+            for (int i = 0; i < 1000; i++) {
+                node.get().insertByKey(new Element("key", EType.STRING, "" + i));
+            }
+            node.set(FileBTreeNode.loadNode(0, nodeChannel, pageManager, null));
+            for (int i = 0; i < 1000; i++) {
+                IArray<Element> found = node.get().findByKey(new Element("key", EType.STRING, "" +  i));
                 assertNotNull(found, "Should find value" + i);
             }
         }
@@ -324,14 +350,14 @@ public class FileBTreeNodeTest {
 
             FileBTreeNode.saveNode(node.get(), nodeChannel);
 
-            for (int i = 12; i >= 0; i--) {
+            for (int i = 999; i >= 0; i--) {
                 node.get().insertByKey(new Element("key", EType.INTEGER,  i));
-                logger.info(node.get().visualize());
             }
-            IArray<Element> found = node.get().findByKey(new Element("key", EType.INTEGER, 3));
-            assertNotNull(found, "Should find value" + 3);
-//            for (int i = 0; i < 20; i++) {
-//            }
+            node.set(FileBTreeNode.loadNode(0, nodeChannel, pageManager, null));
+            for (int i = 0; i < 1000; i++) {
+                IArray<Element> found = node.get().findByKey(new Element("key", EType.INTEGER, i));
+                assertNotNull(found, "Should find value" + i);
+            }
         }
     }
 
@@ -357,7 +383,7 @@ public class FileBTreeNodeTest {
             for (int i = 0; i < 100; i++) {
                 node.get().insertByKey(new Element("key", EType.INTEGER, i));
             }
-
+            node.set(FileBTreeNode.loadNode(0, nodeChannel, pageManager, null));
             for (int i = 0; i < 1000; i++) {
                 IArray<Element> found = node.get().findByKey(new Element("key", EType.INTEGER, i));
                 assertNotNull(found, "Should find value" + i);
