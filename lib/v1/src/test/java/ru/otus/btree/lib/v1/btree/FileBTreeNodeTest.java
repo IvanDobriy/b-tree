@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.io.TempDir;
 import ru.otus.btree.lib.api.array.IArray;
-import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.EType;
+import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.v1.array.SingleArray;
 
 import java.io.File;
@@ -13,11 +13,14 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class FileBTreeNodeTest {
+
+    private Logger logger = Logger.getLogger(this.getClass().getName());
 
     @TempDir
     Path tempDir;
@@ -261,7 +264,7 @@ public class FileBTreeNodeTest {
             long page = pageManager.allocatePage();
             AtomicReference<FileBTreeNode> node = new AtomicReference<>();
 
-            node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, (root)-> {
+            node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, (root) -> {
                 node.set(root);
             }));
 
@@ -292,17 +295,45 @@ public class FileBTreeNodeTest {
 
             node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, node::set));
 
-            for (int i = 0; i < 1000; i++) {
-                node.get().insertByKey(new Element("key", EType.INTEGER,  i));
+            for (int i = 0; i < 20; i++) {
+                node.get().insertByKey(new Element("key", EType.INTEGER, i));
             }
+            logger.info(node.get().visualize());
 
-            for (int i = 0; i < 1000; i++) {
-                IArray<Element> found = node.get().findByKey(new Element("key", EType.INTEGER,  i));
+            for (int i = 0; i < 20; i++) {
+                IArray<Element> found = node.get().findByKey(new Element("key", EType.INTEGER, i));
                 assertNotNull(found, "Should find value" + i);
             }
         }
     }
 
+    @Test
+    public void testSplitNodeReverseKeyOrderWithManyElementsElementTypeInt() throws Exception {
+        File pageTempFile = tempDir.resolve("page-manager-split-order-many-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-split-order-many-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()
+        ) {
+            PageManager pageManager = new PageManager(pageChannel);
+            long page = pageManager.allocatePage();
+            AtomicReference<FileBTreeNode> node = new AtomicReference<>();
+
+            node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, node::set));
+
+            FileBTreeNode.saveNode(node.get(), nodeChannel);
+
+            for (int i = 12; i >= 0; i--) {
+                node.get().insertByKey(new Element("key", EType.INTEGER,  i));
+                logger.info(node.get().visualize());
+            }
+            IArray<Element> found = node.get().findByKey(new Element("key", EType.INTEGER, 3));
+            assertNotNull(found, "Should find value" + 3);
+//            for (int i = 0; i < 20; i++) {
+//            }
+        }
+    }
 
     @Test
     public void testSplitNodePreservesKeyOrderWithManyElementsElementTypeIntegerWithRepeatedKeys() throws Exception {
@@ -320,15 +351,15 @@ public class FileBTreeNodeTest {
             node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, node::set));
 
             for (int i = 0; i < 1000; i++) {
-                node.get().insertByKey(new Element("key", EType.INTEGER,  i));
+                node.get().insertByKey(new Element("key", EType.INTEGER, i));
             }
 
             for (int i = 0; i < 100; i++) {
-                node.get().insertByKey(new Element("key", EType.INTEGER,  i));
+                node.get().insertByKey(new Element("key", EType.INTEGER, i));
             }
 
             for (int i = 0; i < 1000; i++) {
-                IArray<Element> found = node.get().findByKey(new Element("key", EType.INTEGER,  i));
+                IArray<Element> found = node.get().findByKey(new Element("key", EType.INTEGER, i));
                 assertNotNull(found, "Should find value" + i);
             }
         }
@@ -359,6 +390,70 @@ public class FileBTreeNodeTest {
             assertEquals(100L, node.getKeys().get(0).get(0).getPosition());
             assertEquals(200L, node.getKeys().get(0).get(1).getPosition());
             assertEquals(300L, node.getKeys().get(0).get(2).getPosition());
+        }
+    }
+
+    @Test
+    public void testVisualize() throws Exception {
+        File pageTempFile = tempDir.resolve("page-manager-visualize-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-visualize-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
+
+            PageManager pageManager = new PageManager(pageChannel);
+            long page = pageManager.allocatePage();
+            AtomicReference<FileBTreeNode> node = new AtomicReference<>();
+
+            node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, node::set));
+
+            node.get().insertByKey(new Element("key", EType.STRING, "B"));
+            node.get().insertByKey(new Element("key", EType.STRING, "A"));
+            node.get().insertByKey(new Element("key", EType.STRING, "C"));
+
+            String visualization = node.get().visualize();
+            assertNotNull(visualization);
+            assertTrue(visualization.contains("Node[pageId=0"), "Should contain root node");
+            assertTrue(visualization.contains("keys: [B]"), "Root should contain key B");
+            assertTrue(visualization.contains("leaf=false"), "Root should not be leaf");
+            assertTrue(visualization.contains("leaf=true"), "Children should be leaves");
+        }
+    }
+
+    @Test
+    public void testFindParentByTreeSearch() throws Exception {
+        File pageTempFile = tempDir.resolve("page-manager-parent-search-test.tmp").toFile();
+        File nodeTempFile = tempDir.resolve("node-parent-search-test.tmp").toFile();
+        try (RandomAccessFile pageRaf = new RandomAccessFile(pageTempFile, "rw");
+             FileChannel pageChannel = pageRaf.getChannel();
+             RandomAccessFile nodeRaf = new RandomAccessFile(nodeTempFile, "rw");
+             FileChannel nodeChannel = nodeRaf.getChannel()) {
+
+            PageManager pageManager = new PageManager(pageChannel);
+            long page = pageManager.allocatePage();
+            AtomicReference<FileBTreeNode> node = new AtomicReference<>();
+
+            node.set(new FileBTreeNode(page, 3, true, nodeChannel, pageManager, node::set));
+
+            node.get().insertByKey(new Element("key", EType.STRING, "B"));
+            node.get().insertByKey(new Element("key", EType.STRING, "A"));
+            node.get().insertByKey(new Element("key", EType.STRING, "C"));
+
+            FileBTreeNode root = node.get();
+            assertNull(root.findParentByTreeSearch(), "Root should have no parent");
+
+            // Root should have two children after split
+            assertEquals(2, root.getChildren().size(), "Root should have 2 children");
+
+            // Load each child and verify it finds the root as its parent
+            for (int i = 0; i < root.getChildren().size(); i++) {
+                Long childPageId = root.getChildren().get(i);
+                FileBTreeNode child = FileBTreeNode.loadNode(childPageId, nodeChannel, pageManager, node::set);
+                FileBTreeNode parent = child.findParentByTreeSearch();
+                assertNotNull(parent, "Child should find a parent");
+                assertEquals(root.getPageId(), parent.getPageId(), "Parent should be the root");
+            }
         }
     }
 

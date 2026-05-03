@@ -188,6 +188,45 @@ public class FileBTreeNode {
         return valueStr;
     }
 
+    /**
+     * Finds the parent of this node by traversing the tree from the root.
+     * Does not rely on parentPageId, which may be stale.
+     *
+     * @return the parent node, or null if this node is the root
+     */
+    public FileBTreeNode findParentByTreeSearch() {
+        if (this.pageId == 0) {
+            return null; // Root is always at page 0
+        }
+        FileBTreeNode root = loadNode(0, fileChannel, pageManager, onRootChanged);
+        return findParentInSubtree(root, this.pageId);
+    }
+
+    private FileBTreeNode findParentInSubtree(FileBTreeNode node, long targetPageId) {
+        if (node == null || node.isLeaf()) {
+            return null;
+        }
+        // Check if the target is a direct child of this node
+        for (int i = 0; i < node.children.size(); i++) {
+            Long childPageId = node.children.get(i);
+            if (childPageId != null && childPageId == targetPageId) {
+                return node;
+            }
+        }
+        // Recurse into each child subtree
+        for (int i = 0; i < node.children.size(); i++) {
+            Long childPageId = node.children.get(i);
+            if (childPageId != null) {
+                FileBTreeNode child = loadNode(childPageId, fileChannel, pageManager, onRootChanged);
+                FileBTreeNode found = findParentInSubtree(child, targetPageId);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
     public IArray<Element> findByKey(Element key) {
         if (key == null) {
             return null;
