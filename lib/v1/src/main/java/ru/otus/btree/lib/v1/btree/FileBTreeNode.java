@@ -11,8 +11,6 @@ import java.nio.channels.FileChannel;
 import java.util.Objects;
 
 public class FileBTreeNode {
-    private static final int PAGE_SIZE = 4096; // Standard file system page size
-
     private long pageId;
     private final int degree;
     private final IArray<IArray<Element>> keys;
