@@ -270,4 +270,24 @@ public class StorageMangerList {
             fileChannel.write(buffer);
         }
     }
+
+    /**
+     * Saves the header to the file channel.
+     * Serializes the header and writes it to the first page.
+     */
+    private void saveHeader() {
+        try {
+            byte[] headerData = StorageMangerHeader.serialize(header);
+            ByteBuffer buffer = ByteBuffer.allocate(PAGE_SIZE);
+            buffer.put(headerData);
+            buffer.flip();
+
+            fileChannel.position(0);
+            while (buffer.hasRemaining()) {
+                fileChannel.write(buffer);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save header", e);
+        }
+    }
 }
