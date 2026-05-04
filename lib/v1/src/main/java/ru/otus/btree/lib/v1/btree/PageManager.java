@@ -4,6 +4,7 @@ import ru.otus.btree.lib.api.array.IArray;
 import ru.otus.btree.lib.v1.array.SingleArray;
 
 import java.nio.channels.FileChannel;
+import java.util.Objects;
 
 /**
  * Manages page allocation for the B-tree file.
@@ -16,6 +17,7 @@ public class PageManager {
     private final IArray<PageManagerEntity> deletedEntities;
 
     public PageManager(FileChannel fileChannel) {
+        Objects.requireNonNull(fileChannel, "file channel is null");
         this.fileChannel = fileChannel;
         this.pageManagerList = new PageManagerList(fileChannel);
         this.deletedEntities = collectDeletedEntities();
