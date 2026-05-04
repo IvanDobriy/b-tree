@@ -169,4 +169,105 @@ public class StorageMangerList {
         buffer.flip();
         return buffer;
     }
+
+    /**
+     * Saves a page record to the file channel.
+     * Uses entity.getId() as the record index.
+     * Data is written block by block. If the record spans across page boundaries,
+     * both pages are written to complete the record.
+     *
+     * @param entity the entity to save
+     */
+    private void savePageRecord(StorageManagerEntity entity) {
+        Objects.requireNonNull(entity, "entity must not be null");
+
+        try {
+            byte[] recordData = StorageManagerEntity.serialize(entity);
+            long offset = calculateOffset((int) entity.getId());
+
+            int pageIndex = (int) (offset / PAGE_SIZE);
+            int positionInPage = (int) (offset % PAGE_SIZE);
+
+            // Ensure required pages exist
+            long requiredSize = (long) (pageIndex + 1) * PAGE_SIZE;
+            if (positionInPage + StorageManagerEntity.RECORD_SIZE > PAGE_SIZE) {
+                // Record spans to next page
+                requiredSize = (long) (pageIndex + 2) * PAGE_SIZE;
+            }
+            ensureFileSize(requiredSize);
+
+            if (positionInPage + StorageManagerEntity.RECORD_SIZE <= PAGE_SIZE) {
+                // Record fits entirely within one page
+                ByteBuffer buffer = readPage(pageIndex);
+                if (buffer.remaining() < positionInPage) {
+                    throw new IOException("Incomplete page data at page " + pageIndex);
+                }
+                buffer.position(positionInPage);
+                buffer.put(recordData, 0, StorageManagerEntity.RECORD_SIZE);
+
+                buffer.flip();
+                writePage(pageIndex, buffer);
+            } else {
+                // Record spans across two pages
+                int bytesInFirstPage = PAGE_SIZE - positionInPage;
+                int bytesInSecondPage = StorageManagerEntity.RECORD_SIZE - bytesInFirstPage;
+
+                // Read and update first page
+                ByteBuffer buffer1 = readPage(pageIndex);
+                if (buffer1.remaining() < positionInPage) {
+                    throw new IOException("Incomplete page data at page " + pageIndex);
+                }
+                buffer1.position(positionInPage);
+                buffer1.put(recordData, 0, bytesInFirstPage);
+
+                buffer1.flip();
+                writePage(pageIndex, buffer1);
+
+                // Read and update second page
+                ByteBuffer buffer2 = readPage(pageIndex + 1);
+                buffer2.put(recordData, bytesInFirstPage, bytesInSecondPage);
+
+                buffer2.flip();
+                writePage(pageIndex + 1, buffer2);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save page record", e);
+        }
+    }
+
+    /**
+     * Ensures the file is at least the specified size by extending it if necessary.
+     *
+     * @param requiredSize the minimum required file size
+     * @throws IOException if an I/O error occurs
+     */
+    private void ensureFileSize(long requiredSize) throws IOException {
+        long currentSize = fileChannel.size();
+        if (currentSize < requiredSize) {
+            fileChannel.position(currentSize);
+            ByteBuffer emptyPage = ByteBuffer.allocate(PAGE_SIZE);
+            while (fileChannel.position() < requiredSize) {
+                emptyPage.clear();
+                while (emptyPage.hasRemaining()) {
+                    fileChannel.write(emptyPage);
+                }
+            }
+        }
+    }
+
+    /**
+     * Writes a ByteBuffer to the specified page in the file channel.
+     *
+     * @param pageIndex the index of the page to write
+     * @param buffer    the buffer containing data to write
+     * @throws IOException if an I/O error occurs
+     */
+    private void writePage(int pageIndex, ByteBuffer buffer) throws IOException {
+        Objects.requireNonNull(buffer, "buffer must not be null");
+
+        fileChannel.position((long) pageIndex * PAGE_SIZE);
+        while (buffer.hasRemaining()) {
+            fileChannel.write(buffer);
+        }
+    }
 }
