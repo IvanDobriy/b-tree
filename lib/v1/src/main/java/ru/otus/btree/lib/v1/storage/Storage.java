@@ -26,8 +26,19 @@ public class Storage implements IStorage {
 
     @Override
     public IArray<Result> get(Element element) {
-        // TODO: implement indexed search
-        return new SingleArray<>(0);
+        Objects.requireNonNull(element, "element is null");
+        int id = (int) element.getPosition();
+        StorageManagerEntity managerEntity = storageManager.getEntityById(id);
+        if (managerEntity == null) {
+            return new SingleArray<>(0);
+        }
+        IEntity data = rawStorage.get(managerEntity.getPosition(), managerEntity.getSize());
+        if (data == null) {
+            return new SingleArray<>(0);
+        }
+        SingleArray<Result> results = new SingleArray<>(1);
+        results.add(0, new Result(data, managerEntity.getPosition()));
+        return results;
     }
 
     @Override
