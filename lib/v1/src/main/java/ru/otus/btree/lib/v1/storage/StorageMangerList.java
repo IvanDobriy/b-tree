@@ -87,6 +87,70 @@ public class StorageMangerList {
     }
 
     /**
+     * Loads a single page record from the file channel by index.
+     *
+     * @param recordIndex the index of the record to load
+     * @return the loaded StorageManagerEntity, or null if record doesn't exist
+     */
+    private StorageManagerEntity loadPageRecord(int recordIndex) {
+        try {
+            long offset = calculateOffset(recordIndex);
+            long fileSize = fileChannel.size();
+
+            if (offset + StorageManagerEntity.RECORD_SIZE > fileSize) {
+                return null;
+            }
+
+            int pageIndex = (int) (offset / PAGE_SIZE);
+            int positionInPage = (int) (offset % PAGE_SIZE);
+            byte[] recordData = new byte[StorageManagerEntity.RECORD_SIZE];
+
+            if (positionInPage + StorageManagerEntity.RECORD_SIZE <= PAGE_SIZE) {
+                // Record fits entirely within one page
+                ByteBuffer buffer = readPage(pageIndex);
+                if (buffer.remaining() < positionInPage + StorageManagerEntity.RECORD_SIZE) {
+                    throw new IOException("Incomplete data read from page " + pageIndex);
+                }
+                buffer.position(positionInPage);
+                buffer.get(recordData, 0, StorageManagerEntity.RECORD_SIZE);
+            } else {
+                // Record spans across two pages
+                int bytesFromFirstPage = PAGE_SIZE - positionInPage;
+                int bytesFromSecondPage = StorageManagerEntity.RECORD_SIZE - bytesFromFirstPage;
+
+                // Read first page
+                ByteBuffer buffer1 = readPage(pageIndex);
+                if (buffer1.remaining() < bytesFromFirstPage) {
+                    throw new IOException("Incomplete data in first page " + pageIndex);
+                }
+                buffer1.position(positionInPage);
+                buffer1.get(recordData, 0, bytesFromFirstPage);
+
+                // Read second page
+                ByteBuffer buffer2 = readPage(pageIndex + 1);
+                if (buffer2.remaining() < bytesFromSecondPage) {
+                    throw new IOException("Incomplete data in second page " + (pageIndex + 1));
+                }
+                buffer2.get(recordData, bytesFromFirstPage, bytesFromSecondPage);
+            }
+
+            return StorageManagerEntity.deserialize(recordData);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load page record", e);
+        }
+    }
+
+    /**
+     * Calculates the offset for a record in the file.
+     *
+     * @param recordIndex the index of the record
+     * @return the calculated offset
+     */
+    private long calculateOffset(int recordIndex) {
+        return PAGE_SIZE + (long) recordIndex * StorageManagerEntity.RECORD_SIZE;
+    }
+
+    /**
      * Reads a single page into a ByteBuffer from the file channel.
      *
      * @param pageIndex the index of the page to read
