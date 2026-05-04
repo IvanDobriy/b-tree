@@ -27,39 +27,28 @@ public class StorageMangerList {
         this.header = Objects.requireNonNull(header, "header must not be null");
     }
 
-
     /**
-     * Returns the page size.
+     * Returns the number of records in the list.
      *
-     * @return page size in bytes
-     */
-    public static int getPageSize() {
-        return PAGE_SIZE;
-    }
-
-    /**
-     * Returns the number of pages in the list.
-     *
-     * @return the page count
+     * @return the record count
      */
     public int getSize() {
         return (int) header.getSize();
     }
 
     /**
-     * Gets a page entity by index.
+     * Gets a storage entity by index.
      * Loads the entity from file if it exists.
      *
-     * @param pageIndex the index of the page to load
-     * @return the PageManagerEntity, or null if not found
+     * @param recordIndex the index of the record to load
+     * @return the StorageManagerEntity, or null if not found
      */
-    public StorageManagerEntity getEntity(int pageIndex) {
-        return loadPageRecord(pageIndex);
+    public StorageManagerEntity getEntity(int recordIndex) {
+        return loadPageRecord(recordIndex);
     }
 
-
     /**
-     * Saves a page entity to the file.
+     * Saves a storage entity to the file.
      * Uses entity.getId() as the record index and savePageRecord to persist the entity.
      * If the entity's ID exceeds current header size, updates header size and saves it.
      *
@@ -77,6 +66,7 @@ public class StorageMangerList {
 
         savePageRecord(entity);
     }
+
 
     /**
      * Loads header from the file channel.
