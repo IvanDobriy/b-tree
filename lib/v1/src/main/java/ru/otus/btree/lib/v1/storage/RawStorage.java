@@ -39,7 +39,20 @@ public class RawStorage {
         }
     }
 
-    public IEntity set(long position, int size){
-        throw new RuntimeException("not yet created");
+    public int set(long position, IEntity entity) {
+        Objects.requireNonNull(entity, "entity is null");
+        try {
+            byte[] data = FileBTreeUtils.serializeEntity(entity);
+            ByteBuffer buffer = ByteBuffer.allocate(data.length);
+            buffer.put(data);
+            buffer.flip();
+            fileChannel.position(position);
+            while (buffer.hasRemaining()) {
+                fileChannel.write(buffer);
+            }
+            return data.length;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to write entity to file", e);
+        }
     }
 }
