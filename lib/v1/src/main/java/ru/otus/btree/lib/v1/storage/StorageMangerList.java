@@ -215,7 +215,7 @@ public class StorageMangerList {
 
     /**
      * Saves a page record to the file channel.
-     * Uses entity.getPosition() as the record index.
+     * Uses entity.getId() as the record index.
      * Data is written block by block. If the record spans across page boundaries,
      * both pages are written to complete the record.
      *
@@ -226,7 +226,7 @@ public class StorageMangerList {
 
         try {
             byte[] recordData = StorageManagerEntity.serialize(entity);
-            long offset = calculateOffset((int) entity.getPosition());
+            long offset = calculateOffset(entity.getId());
 
             int pageIndex = (int) (offset / PAGE_SIZE);
             int positionInPage = (int) (offset % PAGE_SIZE);
