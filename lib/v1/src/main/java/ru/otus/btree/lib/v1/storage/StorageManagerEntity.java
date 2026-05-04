@@ -1,5 +1,10 @@
 package ru.otus.btree.lib.v1.storage;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+
 public class StorageManagerEntity {
     public static final int RECORD_SIZE = 13;
 
@@ -51,8 +56,8 @@ public class StorageManagerEntity {
             return new byte[0];
         }
 
-        try (java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-             java.io.DataOutputStream dos = new java.io.DataOutputStream(baos)) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             DataOutputStream dos = new DataOutputStream(baos)) {
 
             dos.writeLong(entity.id);
             dos.writeInt(entity.size);
@@ -76,8 +81,8 @@ public class StorageManagerEntity {
             return null;
         }
 
-        try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(data);
-             java.io.DataInputStream dis = new java.io.DataInputStream(bais)) {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
+             DataInputStream dis = new DataInputStream(bais)) {
 
             StorageManagerEntity entity = new StorageManagerEntity();
             entity.id = dis.readLong();
