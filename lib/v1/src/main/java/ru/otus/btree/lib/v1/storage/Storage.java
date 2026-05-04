@@ -59,6 +59,17 @@ public class Storage implements IStorage {
     @Override
     public void insert(IArray<IEntity> entity) {
         Objects.requireNonNull(entity, "entity array is null");
+        for (int i = 0; i < entity.size(); i++) {
+            IEntity item = entity.get(i);
+            if (item == null) {
+                continue;
+            }
+            byte[] data = FileBTreeUtils.serializeEntity(item);
+            int entitySize = data.length;
+            long position = storageManager.allocatePosition(entitySize);
+            rawStorage.set(position, item);
+            size++;
+        }
     }
 
     @Override

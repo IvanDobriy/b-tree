@@ -63,6 +63,7 @@ public class StorageManager {
 
             // Create new entity
             StorageManagerEntity newEntity = new StorageManagerEntity();
+            newEntity.setId((int) storageMangerList.getHeader().getSize());
             newEntity.setPosition(position);
             newEntity.setSize(entitySize);
             newEntity.setUsed(true);
