@@ -44,7 +44,7 @@ public class StorageMangerList {
      * @return the StorageManagerEntity, or null if not found
      */
     public StorageManagerEntity getEntity(int recordIndex) {
-        return loadPageRecord(recordIndex);
+        return loadRecord(recordIndex);
     }
 
     /**
@@ -131,7 +131,7 @@ public class StorageMangerList {
      * @param recordIndex the index of the record to load
      * @return the loaded StorageManagerEntity, or null if record doesn't exist
      */
-    private StorageManagerEntity loadPageRecord(int recordIndex) {
+    private StorageManagerEntity loadRecord(int recordIndex) {
         try {
             long offset = calculateOffset(recordIndex);
             long fileSize = fileChannel.size();
