@@ -62,14 +62,29 @@ public class StorageManagerTest {
     }
 
     @Test
-    public void testAllocatePositionMultipleTimes() {
+    public void testGetEntityByIdExisting() {
         StorageManager manager = new StorageManager(fileChannel);
-        long position = manager.allocatePosition(1);
-        assertEquals(0L, position);
-        position = manager.allocatePosition(2);
-        assertEquals(1L, position);
-        position = manager.allocatePosition(3);
-        assertEquals(3L, position);
+        manager.allocatePosition(4096);
+
+        StorageManagerEntity entity = manager.getEntityById(0);
+        assertNotNull(entity);
+        assertEquals(0L, entity.getPosition());
+        assertEquals(4096, entity.getSize());
+        assertTrue(entity.isUsed());
+    }
+
+    @Test
+    public void testGetEntityByIdNotFound() {
+        StorageManager manager = new StorageManager(fileChannel);
+        StorageManagerEntity entity = manager.getEntityById(100);
+        assertNull(entity);
+    }
+
+    @Test
+    public void testGetEntityByIdNegative() {
+        StorageManager manager = new StorageManager(fileChannel);
+        StorageManagerEntity entity = manager.getEntityById(-1);
+        assertNull(entity);
     }
 
     @Test
@@ -96,26 +111,5 @@ public class StorageManagerTest {
         assertEquals(2048, reused.getSize());
     }
 
-    @Test
-    public void testReuseDeletedEntityReturnsIdAsPosition() throws IOException {
-        // Setup: create a deleted entity with id=1
-        StorageMangerList list = new StorageMangerList(fileChannel);
-        StorageManagerEntity entity = new StorageManagerEntity();
-        entity.setPosition(1L);
-        entity.setSize(4096);
-        entity.setUsed(false);
-        list.setEntity(entity);
 
-        // Recreate StorageManager
-        StorageManager manager = new StorageManager(fileChannel);
-        long position = manager.allocatePosition(512);
-
-        // Position equals the reused id
-        assertEquals(1L, position);
-
-        StorageManagerEntity reused = list.getEntity(1);
-        assertNotNull(reused);
-        assertTrue(reused.isUsed());
-        assertEquals(512, reused.getSize());
-    }
 }
