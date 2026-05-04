@@ -15,4 +15,6 @@ public interface IStorage {
     void remove(Element element);
 
     long size();
+
+    long fileSize();
 }

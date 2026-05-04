@@ -16,12 +16,10 @@ import java.util.Objects;
 public class Storage implements IStorage {
     private final StorageManager storageManager;
     private final RawStorage rawStorage;
-    private long size;
 
     public Storage(FileChannel dataChannel, FileChannel metaChannel) {
         this.rawStorage = new RawStorage(Objects.requireNonNull(dataChannel, "data channel is null"));
         this.storageManager = new StorageManager(Objects.requireNonNull(metaChannel, "meta channel is null"));
-        this.size = 0;
     }
 
     @Override
@@ -68,7 +66,6 @@ public class Storage implements IStorage {
             int entitySize = data.length;
             long position = storageManager.allocatePosition(entitySize);
             rawStorage.set(position, item);
-            size++;
         }
     }
 
@@ -79,7 +76,12 @@ public class Storage implements IStorage {
 
     @Override
     public long size() {
-        return size;
+        return storageManager.size();
+    }
+
+    @Override
+    public long fileSize() {
+        return storageManager.fileSize();
     }
 
 }

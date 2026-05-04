@@ -26,6 +26,14 @@ public class StorageManager {
         return PAGE_SIZE;
     }
 
+    public long size() {
+        return storageMangerList.getHeader().getSize();
+    }
+
+    public long fileSize(){
+        return storageMangerList.getHeader().getFileSize();
+    }
+
     public StorageManagerEntity getEntityById(int id) {
         if (id < 0) {
             return null;
