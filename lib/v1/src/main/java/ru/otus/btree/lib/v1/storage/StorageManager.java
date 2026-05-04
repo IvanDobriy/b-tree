@@ -26,6 +26,13 @@ public class StorageManager {
         return PAGE_SIZE;
     }
 
+    public StorageManagerEntity getEntityById(int id) {
+        if (id < 0) {
+            return null;
+        }
+        return storageMangerList.getEntity(id);
+    }
+
     /**
      * Allocates a new position and returns its position ID.
      * First checks for deleted entities to reuse, otherwise creates a new one.
