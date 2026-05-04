@@ -1,6 +1,6 @@
 package ru.otus.btree.lib.v1.storage;
 
-import ru.otus.btree.lib.v1.storage.StorageMangerHeader;
+import ru.otus.btree.lib.v1.btree.PageManagerEntity;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -27,6 +27,57 @@ public class StorageMangerList {
 
     public void setHeader(StorageMangerHeader header) {
         this.header = Objects.requireNonNull(header, "header must not be null");
+    }
+
+
+    /**
+     * Returns the page size.
+     *
+     * @return page size in bytes
+     */
+    public static int getPageSize() {
+        return PAGE_SIZE;
+    }
+
+    /**
+     * Returns the number of pages in the list.
+     *
+     * @return the page count
+     */
+    public int getSize() {
+        return (int) header.getSize();
+    }
+
+    /**
+     * Gets a page entity by index.
+     * Loads the entity from file if it exists.
+     *
+     * @param pageIndex the index of the page to load
+     * @return the PageManagerEntity, or null if not found
+     */
+    public StorageManagerEntity getEntity(int pageIndex) {
+        return loadPageRecord(pageIndex);
+    }
+
+
+    /**
+     * Saves a page entity to the file.
+     * Uses entity.getId() as the record index and savePageRecord to persist the entity.
+     * If the entity's ID exceeds current header size, updates header size and saves it.
+     *
+     * @param entity the entity to save
+     */
+    public void setEntity(StorageManagerEntity entity) {
+        Objects.requireNonNull(entity, "entity must not be null");
+
+        // Check if entity ID exceeds current header size
+        long entityId = entity.getId();
+        if (entityId >= header.getSize()) {
+            header.setSize(entityId + 1);
+            saveHeader();
+        }
+
+        savePageRecord(entity);
     }
 
     /**
