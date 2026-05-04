@@ -41,8 +41,19 @@ public class Storage implements IStorage {
 
     @Override
     public IArray<Result> get(long from, long to) {
-        // TODO: implement range scan
-        return new SingleArray<>(0);
+        SingleArray<Result> results = new SingleArray<>(0);
+        for (int id = (int) from; id <= (int) to; id++) {
+            StorageManagerEntity managerEntity = storageManager.getEntityById(id);
+            if (managerEntity == null) {
+                continue;
+            }
+            IEntity data = rawStorage.get(managerEntity.getPosition(), managerEntity.getSize());
+            if (data == null) {
+                continue;
+            }
+            results.add(results.size(), new Result(data, managerEntity.getPosition()));
+        }
+        return results;
     }
 
     @Override
