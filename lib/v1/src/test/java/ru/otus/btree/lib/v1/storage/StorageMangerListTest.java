@@ -1,5 +1,6 @@
 package ru.otus.btree.lib.v1.storage;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -10,6 +11,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,8 +26,15 @@ public class StorageMangerListTest {
 
     @BeforeEach
     public void setUp() throws IOException {
-        tempFile = tempDir.resolve("storagemanager_test.dat");
+        tempFile = tempDir.resolve(UUID.randomUUID().toString() + ".dat");
         fileChannel = FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+    }
+
+    @AfterEach
+    public void tearDown() throws IOException {
+        if (fileChannel != null && fileChannel.isOpen()) {
+            fileChannel.close();
+        }
     }
 
     @Test
@@ -34,6 +43,7 @@ public class StorageMangerListTest {
 
         assertNotNull(list.getHeader());
         assertEquals(0, list.getHeader().getSize());
+        assertEquals(0L, list.getHeader().getFileSize());
         assertEquals(StorageMangerList.PAGE_SIZE, fileChannel.size());
     }
 
@@ -41,7 +51,7 @@ public class StorageMangerListTest {
     public void testSaveAndLoadEntity() throws IOException {
         StorageMangerList list = new StorageMangerList(fileChannel);
 
-        StorageManagerEntity entity = createEntity(0L, 4096, true);
+        StorageManagerEntity entity = new StorageManagerEntity(0L, 4096, true, 0);
         list.setEntity(entity);
 
         StorageManagerEntity loaded = list.getEntity(0);
@@ -50,7 +60,10 @@ public class StorageMangerListTest {
         assertEquals(entity.getPosition(), loaded.getPosition());
         assertEquals(entity.getSize(), loaded.getSize());
         assertEquals(entity.isUsed(), loaded.isUsed());
+        assertEquals(entity.getId(), loaded.getId());
 
+        assertEquals(1, list.getHeader().getSize());
+        assertEquals(entity.getPosition() + entity.getSize(), list.getHeader().getFileSize());
         assertEquals(2 * StorageMangerList.PAGE_SIZE, fileChannel.size());
     }
 
@@ -59,14 +72,17 @@ public class StorageMangerListTest {
         StorageMangerList list = new StorageMangerList(fileChannel);
 
         StorageManagerEntity[] entities = {
-            createEntity(0L, 4096, true),
-            createEntity(1L, 4096, false),
-            createEntity(2L, 8192, true)
+            new StorageManagerEntity(0L, 4096, true, 0),
+            new StorageManagerEntity(1L, 4096, false, 1),
+            new StorageManagerEntity(2L, 8192, true, 2)
         };
 
         for (StorageManagerEntity entity : entities) {
             list.setEntity(entity);
         }
+
+        assertEquals(3, list.getHeader().getSize());
+        assertEquals(entities[entities.length - 1].getPosition() + entities[entities.length - 1].getSize(), list.getHeader().getFileSize());
 
         for (int i = 0; i < entities.length; i++) {
             StorageManagerEntity loaded = list.getEntity(i);
@@ -74,6 +90,7 @@ public class StorageMangerListTest {
             assertEquals(entities[i].getPosition(), loaded.getPosition());
             assertEquals(entities[i].getSize(), loaded.getSize());
             assertEquals(entities[i].isUsed(), loaded.isUsed());
+            assertEquals(entities[i].getId(), loaded.getId());
         }
 
         assertEquals(2 * StorageMangerList.PAGE_SIZE, fileChannel.size());
@@ -105,7 +122,7 @@ public class StorageMangerListTest {
         // positionInPage = 8176 % 4096 = 4080
         // So record 240 spans pages (position 4080 + 17 = 4097 > 4096)
 
-        StorageManagerEntity entity = createEntity(240L, 4096, true);
+        StorageManagerEntity entity = new StorageManagerEntity(240L, 4096, true, 240);
         list.setEntity(entity);
 
         StorageManagerEntity loaded = list.getEntity(240);
@@ -114,6 +131,7 @@ public class StorageMangerListTest {
         assertEquals(entity.getPosition(), loaded.getPosition());
         assertEquals(entity.getSize(), loaded.getSize());
         assertEquals(entity.isUsed(), loaded.isUsed());
+        assertEquals(entity.getId(), loaded.getId());
 
         assertEquals(3 * StorageMangerList.PAGE_SIZE, fileChannel.size());
     }
@@ -122,10 +140,11 @@ public class StorageMangerListTest {
     public void testFileGrowthOnSave() throws IOException {
         StorageMangerList list = new StorageMangerList(fileChannel);
 
-        StorageManagerEntity entity = createEntity(1000L, 4096, true);
+        StorageManagerEntity entity = new StorageManagerEntity(1000L, 4096, true, 1000);
         list.setEntity(entity);
 
         assertEquals(1001, list.getSize());
+        assertEquals(entity.getPosition() + entity.getSize(), list.getHeader().getFileSize());
 
         long expectedSize = StorageMangerList.PAGE_SIZE + 5 * StorageMangerList.PAGE_SIZE;
         assertEquals(expectedSize, fileChannel.size());
@@ -135,7 +154,7 @@ public class StorageMangerListTest {
     public void testReloadFromFile() throws IOException {
         {
             StorageMangerList list = new StorageMangerList(fileChannel);
-            StorageManagerEntity entity = createEntity(5L, 4096, true);
+            StorageManagerEntity entity = new StorageManagerEntity(5L, 4096, true, 5);
             list.setEntity(entity);
 
             assertEquals(2 * StorageMangerList.PAGE_SIZE, fileChannel.size());
@@ -153,8 +172,10 @@ public class StorageMangerListTest {
         assertEquals(5L, loaded.getPosition());
         assertEquals(4096, loaded.getSize());
         assertTrue(loaded.isUsed());
+        assertEquals(5, loaded.getId());
 
         assertEquals(6, list.getSize());
+        assertEquals(5L + 4096, list.getHeader().getFileSize());
     }
 
     @Test
@@ -176,11 +197,9 @@ public class StorageMangerListTest {
         assertThrows(NullPointerException.class, () -> list.setHeader(null));
     }
 
-    private StorageManagerEntity createEntity(long id, int size, boolean used) {
-        StorageManagerEntity entity = new StorageManagerEntity();
-        entity.setPosition(id);
-        entity.setSize(size);
-        entity.setUsed(used);
-        return entity;
+    @Test
+    public void testGetFileChannel() {
+        StorageMangerList list = new StorageMangerList(fileChannel);
+        assertEquals(fileChannel, list.getFileChannel());
     }
 }
