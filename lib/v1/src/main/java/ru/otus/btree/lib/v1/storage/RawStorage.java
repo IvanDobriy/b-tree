@@ -1,0 +1,22 @@
+package ru.otus.btree.lib.v1.storage;
+
+import ru.otus.btree.lib.api.btree.IEntity;
+
+import java.nio.channels.FileChannel;
+import java.util.Objects;
+
+public class RawStorage {
+    private final FileChannel fileChannel;
+
+    public RawStorage(FileChannel fileChannel) {
+        this.fileChannel = Objects.requireNonNull(fileChannel, "file channel is null");
+    }
+
+    public IEntity get(long position, int size){
+        throw new RuntimeException("not yet created");
+    }
+
+    public IEntity set(long position, int size){
+        throw new RuntimeException("not yet created");
+    }
+}
