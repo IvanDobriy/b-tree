@@ -99,7 +99,9 @@ public class PageManagerList {
                 buffer.clear();
 
                 fileChannel.position(0);
-                fileChannel.write(buffer);
+                while (buffer.hasRemaining()) {
+                    fileChannel.write(buffer);
+                }
 
                 return newHeader;
             }
@@ -314,7 +316,9 @@ public class PageManagerList {
         Objects.requireNonNull(buffer, "buffer must not be null");
 
         fileChannel.position((long) pageIndex * PAGE_SIZE);
-        fileChannel.write(buffer);
+        while (buffer.hasRemaining()) {
+            fileChannel.write(buffer);
+        }
     }
 
     /**
@@ -329,7 +333,9 @@ public class PageManagerList {
             buffer.flip();
 
             fileChannel.position(0);
-            fileChannel.write(buffer);
+            while (buffer.hasRemaining()) {
+                fileChannel.write(buffer);
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to save header", e);
         }
