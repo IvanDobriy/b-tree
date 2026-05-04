@@ -5,5 +5,5 @@ public interface IEntity {
 
     void set(Element element);
 
-    IArray<Element> toArray();
+    String toString();
 }
