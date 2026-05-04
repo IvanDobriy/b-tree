@@ -14,6 +14,7 @@ public class StorageManagerEntityTest {
         original.setPosition(4096L);
         original.setSize(4096);
         original.setUsed(true);
+        original.setId(7);
 
         byte[] serialized = StorageManagerEntity.serialize(original);
         StorageManagerEntity deserialized = StorageManagerEntity.deserialize(serialized);
@@ -22,6 +23,7 @@ public class StorageManagerEntityTest {
         assertEquals(4096L, deserialized.getPosition());
         assertEquals(4096, deserialized.getSize());
         assertTrue(deserialized.isUsed());
+        assertEquals(7, deserialized.getId());
     }
 
     @Test
@@ -48,6 +50,7 @@ public class StorageManagerEntityTest {
         original.setPosition(8192L);
         original.setSize(4096);
         original.setUsed(false);
+        original.setId(42);
 
         byte[] serialized = StorageManagerEntity.serialize(original);
         StorageManagerEntity deserialized = StorageManagerEntity.deserialize(serialized);
@@ -56,15 +59,16 @@ public class StorageManagerEntityTest {
         assertEquals(8192L, deserialized.getPosition());
         assertEquals(4096, deserialized.getSize());
         assertFalse(deserialized.isUsed());
+        assertEquals(42, deserialized.getId());
     }
 
     @Test
     public void testRoundTripMultipleEntities() {
         StorageManagerEntity[] entities = {
-            createEntity(0L, 4096, true),
-            createEntity(4096L, 4096, false),
-            createEntity(8192L, 8192, true),
-            createEntity(Long.MAX_VALUE, Integer.MAX_VALUE, false)
+            createEntity(0L, 4096, true, 1),
+            createEntity(4096L, 4096, false, 2),
+            createEntity(8192L, 8192, true, 3),
+            createEntity(Long.MAX_VALUE, Integer.MAX_VALUE, false, Integer.MAX_VALUE)
         };
 
         for (StorageManagerEntity original : entities) {
@@ -75,22 +79,34 @@ public class StorageManagerEntityTest {
             assertEquals(original.getPosition(), deserialized.getPosition());
             assertEquals(original.getSize(), deserialized.getSize());
             assertEquals(original.isUsed(), deserialized.isUsed());
+            assertEquals(original.getId(), deserialized.getId());
         }
     }
 
     @Test
     public void testConstructorWithParameters() {
-        StorageManagerEntity entity = new StorageManagerEntity(123L, 456, true);
+        StorageManagerEntity entity = new StorageManagerEntity(123L, 456, true, 0);
         assertEquals(123L, entity.getPosition());
         assertEquals(456, entity.getSize());
         assertTrue(entity.isUsed());
+        assertEquals(0, entity.getId());
     }
 
-    private StorageManagerEntity createEntity(long id, int size, boolean used) {
+    @Test
+    public void testConstructorWithIdParameter() {
+        StorageManagerEntity entity = new StorageManagerEntity(123L, 456, true, 99);
+        assertEquals(123L, entity.getPosition());
+        assertEquals(456, entity.getSize());
+        assertTrue(entity.isUsed());
+        assertEquals(99, entity.getId());
+    }
+
+    private StorageManagerEntity createEntity(long position, int size, boolean used, int id) {
         StorageManagerEntity entity = new StorageManagerEntity();
-        entity.setPosition(id);
+        entity.setPosition(position);
         entity.setSize(size);
         entity.setUsed(used);
+        entity.setId(id);
         return entity;
     }
 }

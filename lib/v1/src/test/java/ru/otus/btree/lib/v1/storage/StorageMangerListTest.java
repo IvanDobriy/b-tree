@@ -99,16 +99,16 @@ public class StorageMangerListTest {
     public void testEntityAcrossPageBoundary() throws IOException {
         StorageMangerList list = new StorageMangerList(fileChannel);
 
-        // PAGE_SIZE = 4096, RECORD_SIZE = 13
+        // PAGE_SIZE = 4096, RECORD_SIZE = 17
         // Records start at offset PAGE_SIZE
-        // Record 315 starts at offset = 4096 + 315 * 13 = 4096 + 4095 = 8191
-        // positionInPage = 8191 % 4096 = 4095
-        // So record 315 spans pages (position 4095 + 13 = 4108 > 4096)
+        // Record 240 starts at offset = 4096 + 240 * 17 = 4096 + 4080 = 8176
+        // positionInPage = 8176 % 4096 = 4080
+        // So record 240 spans pages (position 4080 + 17 = 4097 > 4096)
 
-        StorageManagerEntity entity = createEntity(315L, 4096, true);
+        StorageManagerEntity entity = createEntity(240L, 4096, true);
         list.setEntity(entity);
 
-        StorageManagerEntity loaded = list.getEntity(315);
+        StorageManagerEntity loaded = list.getEntity(240);
 
         assertNotNull(loaded);
         assertEquals(entity.getPosition(), loaded.getPosition());
@@ -127,7 +127,7 @@ public class StorageMangerListTest {
 
         assertEquals(1001, list.getSize());
 
-        long expectedSize = StorageMangerList.PAGE_SIZE + 4 * StorageMangerList.PAGE_SIZE;
+        long expectedSize = StorageMangerList.PAGE_SIZE + 5 * StorageMangerList.PAGE_SIZE;
         assertEquals(expectedSize, fileChannel.size());
     }
 

@@ -6,19 +6,21 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
 public class StorageManagerEntity {
-    public static final int RECORD_SIZE = 13;
+    public static final int RECORD_SIZE = 17;
 
     private long position;
     private int size;
     private boolean used;
+    private int id;
 
     public StorageManagerEntity() {
     }
 
-    public StorageManagerEntity(long position, int size, boolean used) {
+    public StorageManagerEntity(long position, int size, boolean used, int id) {
         this.position = position;
         this.size = size;
         this.used = used;
+        this.id = id;
     }
 
     public long getPosition() {
@@ -45,6 +47,14 @@ public class StorageManagerEntity {
         this.used = used;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     /**
      * Serializes a StorageManagerEntity to a byte array.
      *
@@ -62,6 +72,7 @@ public class StorageManagerEntity {
             dos.writeLong(entity.position);
             dos.writeInt(entity.size);
             dos.writeBoolean(entity.used);
+            dos.writeInt(entity.id);
 
             dos.flush();
             return baos.toByteArray();
@@ -88,6 +99,7 @@ public class StorageManagerEntity {
             entity.position = dis.readLong();
             entity.size = dis.readInt();
             entity.used = dis.readBoolean();
+            entity.id = dis.readInt();
 
             return entity;
         } catch (java.io.IOException e) {
