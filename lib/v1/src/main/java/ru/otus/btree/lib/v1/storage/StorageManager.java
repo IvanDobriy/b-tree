@@ -31,9 +31,10 @@ public class StorageManager {
      * First checks for deleted entities to reuse, otherwise creates a new one.
      * Position ID is the byte offset in the file.
      *
+     * @param entitySize the size of the entity to allocate
      * @return the newly allocated position ID
      */
-    public long allocatePosition() {
+    public long allocatePosition(int entitySize) {
         long position;
 
         // Check if there are deleted entities to reuse
@@ -45,18 +46,19 @@ public class StorageManager {
 
             // Mark as used and save
             reusedEntity.setUsed(true);
+            reusedEntity.setSize(entitySize);
             storageMangerList.setEntity(reusedEntity);
 
-            position = reusedEntity.getId() * PAGE_SIZE;
+            position = reusedEntity.getId() + (long) entitySize;
         } else {
-            // Allocate new position based on header size
-            long newIndex = storageMangerList.getHeader().getSize();
-            position = newIndex * PAGE_SIZE;
+            // Allocate new position based on header file size
+            long newIndex = storageMangerList.getHeader().getFileSize();
+            position = newIndex + (long) entitySize;
 
             // Create new entity
             StorageManagerEntity newEntity = new StorageManagerEntity();
             newEntity.setId(newIndex);
-            newEntity.setSize(PAGE_SIZE);
+            newEntity.setSize(entitySize);
             newEntity.setUsed(true);
 
             // Add to storageMangerList (this will update header size)
