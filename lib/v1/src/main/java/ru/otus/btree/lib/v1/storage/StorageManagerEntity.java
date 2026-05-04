@@ -8,25 +8,25 @@ import java.io.DataOutputStream;
 public class StorageManagerEntity {
     public static final int RECORD_SIZE = 13;
 
-    private long id;
+    private long position;
     private int size;
     private boolean used;
 
     public StorageManagerEntity() {
     }
 
-    public StorageManagerEntity(long id, int size, boolean used) {
-        this.id = id;
+    public StorageManagerEntity(long position, int size, boolean used) {
+        this.position = position;
         this.size = size;
         this.used = used;
     }
 
-    public long getId() {
-        return id;
+    public long getPosition() {
+        return position;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void setPosition(long position) {
+        this.position = position;
     }
 
     public int getSize() {
@@ -59,7 +59,7 @@ public class StorageManagerEntity {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              DataOutputStream dos = new DataOutputStream(baos)) {
 
-            dos.writeLong(entity.id);
+            dos.writeLong(entity.position);
             dos.writeInt(entity.size);
             dos.writeBoolean(entity.used);
 
@@ -85,7 +85,7 @@ public class StorageManagerEntity {
              DataInputStream dis = new DataInputStream(bais)) {
 
             StorageManagerEntity entity = new StorageManagerEntity();
-            entity.id = dis.readLong();
+            entity.position = dis.readLong();
             entity.size = dis.readInt();
             entity.used = dis.readBoolean();
 

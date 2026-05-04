@@ -47,7 +47,7 @@ public class StorageMangerListTest {
         StorageManagerEntity loaded = list.getEntity(0);
 
         assertNotNull(loaded);
-        assertEquals(entity.getId(), loaded.getId());
+        assertEquals(entity.getPosition(), loaded.getPosition());
         assertEquals(entity.getSize(), loaded.getSize());
         assertEquals(entity.isUsed(), loaded.isUsed());
 
@@ -71,7 +71,7 @@ public class StorageMangerListTest {
         for (int i = 0; i < entities.length; i++) {
             StorageManagerEntity loaded = list.getEntity(i);
             assertNotNull(loaded);
-            assertEquals(entities[i].getId(), loaded.getId());
+            assertEquals(entities[i].getPosition(), loaded.getPosition());
             assertEquals(entities[i].getSize(), loaded.getSize());
             assertEquals(entities[i].isUsed(), loaded.isUsed());
         }
@@ -111,7 +111,7 @@ public class StorageMangerListTest {
         StorageManagerEntity loaded = list.getEntity(315);
 
         assertNotNull(loaded);
-        assertEquals(entity.getId(), loaded.getId());
+        assertEquals(entity.getPosition(), loaded.getPosition());
         assertEquals(entity.getSize(), loaded.getSize());
         assertEquals(entity.isUsed(), loaded.isUsed());
 
@@ -150,7 +150,7 @@ public class StorageMangerListTest {
         StorageManagerEntity loaded = list.getEntity(5);
 
         assertNotNull(loaded);
-        assertEquals(5L, loaded.getId());
+        assertEquals(5L, loaded.getPosition());
         assertEquals(4096, loaded.getSize());
         assertTrue(loaded.isUsed());
 
@@ -178,7 +178,7 @@ public class StorageMangerListTest {
 
     private StorageManagerEntity createEntity(long id, int size, boolean used) {
         StorageManagerEntity entity = new StorageManagerEntity();
-        entity.setId(id);
+        entity.setPosition(id);
         entity.setSize(size);
         entity.setUsed(used);
         return entity;

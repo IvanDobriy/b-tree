@@ -49,7 +49,7 @@ public class StorageMangerList {
 
     /**
      * Saves a storage entity to the file.
-     * Uses entity.getId() as the record index and savePageRecord to persist the entity.
+     * Uses entity.getPosition() as the record index and savePageRecord to persist the entity.
      * If the entity's ID exceeds current header size, updates header size and saves it.
      *
      * @param entity the entity to save
@@ -58,7 +58,7 @@ public class StorageMangerList {
         Objects.requireNonNull(entity, "entity must not be null");
 
         // Check if entity ID exceeds current header size
-        long entityId = entity.getId();
+        long entityId = entity.getPosition();
         if (entityId >= header.getSize()) {
             header.setSize(entityId + 1);
             header.setFileSize(entityId + entity.getSize());
@@ -214,7 +214,7 @@ public class StorageMangerList {
 
     /**
      * Saves a page record to the file channel.
-     * Uses entity.getId() as the record index.
+     * Uses entity.getPosition() as the record index.
      * Data is written block by block. If the record spans across page boundaries,
      * both pages are written to complete the record.
      *
@@ -225,7 +225,7 @@ public class StorageMangerList {
 
         try {
             byte[] recordData = StorageManagerEntity.serialize(entity);
-            long offset = calculateOffset((int) entity.getId());
+            long offset = calculateOffset((int) entity.getPosition());
 
             int pageIndex = (int) (offset / PAGE_SIZE);
             int positionInPage = (int) (offset % PAGE_SIZE);

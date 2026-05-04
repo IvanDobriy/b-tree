@@ -77,7 +77,7 @@ public class StorageManagerTest {
         // Setup: create a deleted entity directly via StorageMangerList
         StorageMangerList list = new StorageMangerList(fileChannel);
         StorageManagerEntity entity = new StorageManagerEntity();
-        entity.setId(0L);
+        entity.setPosition(0L);
         entity.setSize(4096);
         entity.setUsed(false);
         list.setEntity(entity);
@@ -101,7 +101,7 @@ public class StorageManagerTest {
         // Setup: create a deleted entity with id=1
         StorageMangerList list = new StorageMangerList(fileChannel);
         StorageManagerEntity entity = new StorageManagerEntity();
-        entity.setId(1L);
+        entity.setPosition(1L);
         entity.setSize(4096);
         entity.setUsed(false);
         list.setEntity(entity);

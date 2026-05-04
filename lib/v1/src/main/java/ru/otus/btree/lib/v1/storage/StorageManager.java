@@ -49,14 +49,14 @@ public class StorageManager {
             reusedEntity.setSize(entitySize);
             storageMangerList.setEntity(reusedEntity);
 
-            position = reusedEntity.getId();
+            position = reusedEntity.getPosition();
         } else {
             // Allocate new position based on header file size
             position = storageMangerList.getHeader().getFileSize();
 
             // Create new entity
             StorageManagerEntity newEntity = new StorageManagerEntity();
-            newEntity.setId(position);
+            newEntity.setPosition(position);
             newEntity.setSize(entitySize);
             newEntity.setUsed(true);
 

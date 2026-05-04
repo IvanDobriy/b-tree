@@ -11,7 +11,7 @@ public class StorageManagerEntityTest {
     @Test
     public void testSerializeDeserialize() {
         StorageManagerEntity original = new StorageManagerEntity();
-        original.setId(4096L);
+        original.setPosition(4096L);
         original.setSize(4096);
         original.setUsed(true);
 
@@ -19,7 +19,7 @@ public class StorageManagerEntityTest {
         StorageManagerEntity deserialized = StorageManagerEntity.deserialize(serialized);
 
         assertNotNull(deserialized);
-        assertEquals(4096L, deserialized.getId());
+        assertEquals(4096L, deserialized.getPosition());
         assertEquals(4096, deserialized.getSize());
         assertTrue(deserialized.isUsed());
     }
@@ -45,7 +45,7 @@ public class StorageManagerEntityTest {
     @Test
     public void testSerializeDeserializeUnusedEntity() {
         StorageManagerEntity original = new StorageManagerEntity();
-        original.setId(8192L);
+        original.setPosition(8192L);
         original.setSize(4096);
         original.setUsed(false);
 
@@ -53,7 +53,7 @@ public class StorageManagerEntityTest {
         StorageManagerEntity deserialized = StorageManagerEntity.deserialize(serialized);
 
         assertNotNull(deserialized);
-        assertEquals(8192L, deserialized.getId());
+        assertEquals(8192L, deserialized.getPosition());
         assertEquals(4096, deserialized.getSize());
         assertFalse(deserialized.isUsed());
     }
@@ -72,7 +72,7 @@ public class StorageManagerEntityTest {
             StorageManagerEntity deserialized = StorageManagerEntity.deserialize(serialized);
 
             assertNotNull(deserialized);
-            assertEquals(original.getId(), deserialized.getId());
+            assertEquals(original.getPosition(), deserialized.getPosition());
             assertEquals(original.getSize(), deserialized.getSize());
             assertEquals(original.isUsed(), deserialized.isUsed());
         }
@@ -81,14 +81,14 @@ public class StorageManagerEntityTest {
     @Test
     public void testConstructorWithParameters() {
         StorageManagerEntity entity = new StorageManagerEntity(123L, 456, true);
-        assertEquals(123L, entity.getId());
+        assertEquals(123L, entity.getPosition());
         assertEquals(456, entity.getSize());
         assertTrue(entity.isUsed());
     }
 
     private StorageManagerEntity createEntity(long id, int size, boolean used) {
         StorageManagerEntity entity = new StorageManagerEntity();
-        entity.setId(id);
+        entity.setPosition(id);
         entity.setSize(size);
         entity.setUsed(used);
         return entity;
