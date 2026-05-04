@@ -58,10 +58,11 @@ public class StorageMangerList {
         Objects.requireNonNull(entity, "entity must not be null");
 
         // Check if entity ID exceeds current header size
-        long entityId = entity.getPosition();
-        if (entityId >= header.getSize()) {
-            header.setSize(entityId + 1);
-            header.setFileSize(entityId + entity.getSize());
+        int id = entity.getId();
+        long position = entity.getPosition();
+        if (id >= header.getSize()) {
+            header.setSize(id + 1);
+            header.setFileSize(position + entity.getSize());
             saveHeader();
         }
 
