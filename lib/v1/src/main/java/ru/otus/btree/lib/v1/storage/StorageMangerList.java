@@ -61,6 +61,7 @@ public class StorageMangerList {
         long entityId = entity.getId();
         if (entityId >= header.getSize()) {
             header.setSize(entityId + 1);
+            header.setFileSize(entityId + entity.getSize());
             saveHeader();
         }
 
