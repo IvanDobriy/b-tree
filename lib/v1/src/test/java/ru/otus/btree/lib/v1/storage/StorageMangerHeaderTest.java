@@ -12,12 +12,14 @@ public class StorageMangerHeaderTest {
     public void testSerializeDeserialize() {
         StorageMangerHeader original = new StorageMangerHeader();
         original.setSize(1024L);
+        original.setFileSize(2048L);
 
         byte[] serialized = StorageMangerHeader.serialize(original);
         StorageMangerHeader deserialized = StorageMangerHeader.deserialize(serialized);
 
         assertNotNull(deserialized);
         assertEquals(1024L, deserialized.getSize());
+        assertEquals(2048L, deserialized.getFileSize());
     }
 
     @Test
@@ -39,18 +41,34 @@ public class StorageMangerHeaderTest {
     }
 
     @Test
+    public void testFileSizeRoundTrip() {
+        StorageMangerHeader original = new StorageMangerHeader();
+        original.setSize(100L);
+        original.setFileSize(500L);
+
+        byte[] serialized = StorageMangerHeader.serialize(original);
+        StorageMangerHeader deserialized = StorageMangerHeader.deserialize(serialized);
+
+        assertNotNull(deserialized);
+        assertEquals(100L, deserialized.getSize());
+        assertEquals(500L, deserialized.getFileSize());
+    }
+
+    @Test
     public void testRoundTripMultipleSizes() {
         long[] sizes = {0L, 1L, 1024L, Long.MAX_VALUE};
 
         for (long size : sizes) {
             StorageMangerHeader original = new StorageMangerHeader();
             original.setSize(size);
+            original.setFileSize(size * 2);
 
             byte[] serialized = StorageMangerHeader.serialize(original);
             StorageMangerHeader deserialized = StorageMangerHeader.deserialize(serialized);
 
             assertNotNull(deserialized);
             assertEquals(size, deserialized.getSize());
+            assertEquals(size * 2, deserialized.getFileSize());
         }
     }
 
@@ -58,5 +76,6 @@ public class StorageMangerHeaderTest {
     public void testConstructorWithParameter() {
         StorageMangerHeader header = new StorageMangerHeader(2048L);
         assertEquals(2048L, header.getSize());
+        assertEquals(0L, header.getFileSize());
     }
 }

@@ -82,6 +82,7 @@ public class StorageMangerList {
                 // Create new header with size = 0
                 StorageMangerHeader newHeader = new StorageMangerHeader();
                 newHeader.setSize(0);
+                newHeader.setFileSize(0);
 
                 // Serialize and save to file
                 byte[] headerData = StorageMangerHeader.serialize(newHeader);
@@ -105,6 +106,7 @@ public class StorageMangerList {
                 // Empty read, create new header
                 StorageMangerHeader newHeader = new StorageMangerHeader();
                 newHeader.setSize(0);
+                newHeader.setFileSize(0);
                 return newHeader;
             }
 

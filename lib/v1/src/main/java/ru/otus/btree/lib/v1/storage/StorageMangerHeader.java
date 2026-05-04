@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 
 public class StorageMangerHeader {
     private long size;
+    private long fileSize;
 
     public StorageMangerHeader() {
     }
@@ -21,6 +22,14 @@ public class StorageMangerHeader {
 
     public void setSize(long size) {
         this.size = size;
+    }
+
+    public long getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(long fileSize) {
+        this.fileSize = fileSize;
     }
 
     /**
@@ -38,6 +47,7 @@ public class StorageMangerHeader {
              DataOutputStream dos = new DataOutputStream(baos)) {
 
             dos.writeLong(header.size);
+            dos.writeLong(header.fileSize);
 
             dos.flush();
             return baos.toByteArray();
@@ -62,6 +72,7 @@ public class StorageMangerHeader {
 
             StorageMangerHeader header = new StorageMangerHeader();
             header.size = dis.readLong();
+            header.fileSize = dis.readLong();
 
             return header;
         } catch (java.io.IOException e) {
