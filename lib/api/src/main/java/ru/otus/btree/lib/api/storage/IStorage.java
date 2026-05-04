@@ -6,7 +6,7 @@ import ru.otus.btree.lib.api.btree.IEntity;
 
 
 public interface IStorage {
-    IArray<Result> get(Element element);
+    Result get(Element element);
 
     IArray<Result> get(long from, long to);
 

@@ -25,20 +25,18 @@ public class Storage implements IStorage {
     }
 
     @Override
-    public IArray<Result> get(Element element) {
+    public Result get(Element element) {
         Objects.requireNonNull(element, "element is null");
         int id = (int) element.getPosition();
         StorageManagerEntity managerEntity = storageManager.getEntityById(id);
         if (managerEntity == null) {
-            return new SingleArray<>(0);
+            return null;
         }
         IEntity data = rawStorage.get(managerEntity.getPosition(), managerEntity.getSize());
         if (data == null) {
-            return new SingleArray<>(0);
+            return null;
         }
-        SingleArray<Result> results = new SingleArray<>(1);
-        results.add(0, new Result(data, managerEntity.getPosition()));
-        return results;
+        return new Result(data, managerEntity.getPosition());
     }
 
     @Override
