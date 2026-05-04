@@ -14,12 +14,12 @@ import java.nio.channels.FileChannel;
 import java.util.Objects;
 
 public class Storage implements IStorage {
-    private final FileChannel dataChannel;
     private final StorageManager storageManager;
+    private final RawStorage rawStorage;
     private long size;
 
     public Storage(FileChannel dataChannel, FileChannel metaChannel) {
-        this.dataChannel = Objects.requireNonNull(dataChannel, "data channel is null");
+        this.rawStorage = new RawStorage(Objects.requireNonNull(dataChannel, "data channel is null"));
         this.storageManager = new StorageManager(Objects.requireNonNull(metaChannel, "meta channel is null"));
         this.size = 0;
     }
