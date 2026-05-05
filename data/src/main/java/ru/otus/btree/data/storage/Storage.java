@@ -90,7 +90,8 @@ public class Storage implements IStorage {
 
     @Override
     public void createIndex(String entityName, String fieldName) {
-        Objects.requireNonNull(entityName, fieldName);
+        Objects.requireNonNull(entityName, "entityName is null");
+        Objects.requireNonNull(fieldName, "fieldName is null");
         withStorage(entityName, (storage) -> {
             return withBTree(entityName, fieldName, (btree) -> {
                 for (int i = 0; i < storage.size(); i++) {
