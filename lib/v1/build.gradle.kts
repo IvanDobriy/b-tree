@@ -8,7 +8,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":lib:api"))
+    api(project(":lib:api"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
