@@ -116,7 +116,7 @@ public class Storage implements IStorage {
 
     @Override
     public IEntity getEntity(String name, int position) {
-        Result result =  withStorage(name, (storage)->{
+        Result result = withStorage(name, (storage) -> {
             return storage.get(position);
         });
         return result.getData();
@@ -124,7 +124,13 @@ public class Storage implements IStorage {
 
     @Override
     public IArray<String> getEntitiesList() {
-        return new SingleArray<>(0);
+        IArray<String> result = withStorageEntityList((list) -> {
+            IArray<String> r = new SingleArray<>(0);
+            for (int i = 0; i < list.getSize(); i++) {
+                r.add(r.size(), list.getEntity(i).getName());
+            }
+        });
+        return result;
     }
 
     @Override
