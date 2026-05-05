@@ -31,18 +31,22 @@ public class Storage implements IStorage {
     public Storage(Path path) {
         this.path = Objects.requireNonNull(path, "path is null");
         try {
-            Path storagePath = path.resolve("./storage");
+            Path storagePath = path.resolve("storage");
             if (!Files.exists(storagePath)) {
-                Files.createDirectories(path);
+                Files.createDirectories(storagePath);
             }
-            storageMetaEntitiyListPath = storagePath.resolve("./meta/storageList");
+            Path metaPath = storagePath.resolve("meta");
+            if (!Files.exists(metaPath)) {
+                Files.createDirectories(metaPath);
+            }
+            storageMetaEntitiyListPath = metaPath.resolve("storageList");
             if (!Files.exists(storageMetaEntitiyListPath)) {
                 Files.createFile(storageMetaEntitiyListPath);
             }
             withStorageEntityList((StorageEntityList list) -> {
                 return null;
             });
-            storageDataPath = storagePath.resolve("./data");
+            storageDataPath = storagePath.resolve("data");
             if (!Files.exists(storageDataPath)) {
                 Files.createDirectories(storageDataPath);
             }
@@ -64,8 +68,8 @@ public class Storage implements IStorage {
         Path dataPath = storageDataPath.resolve(name + ".data");
         Path metaPath = storageDataPath.resolve(name + ".meta");
 
-        try (FileChannel dataFc = FileChannel.open(dataPath, StandardOpenOption.READ, StandardOpenOption.WRITE);
-             FileChannel metaFc = FileChannel.open(metaPath, StandardOpenOption.READ, StandardOpenOption.WRITE);
+        try (FileChannel dataFc = FileChannel.open(dataPath, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+             FileChannel metaFc = FileChannel.open(metaPath, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
         ) {
             ru.otus.btree.lib.v1.storage.Storage storage = new ru.otus.btree.lib.v1.storage.Storage(dataFc, metaFc);
             return callback.call(storage);
@@ -78,8 +82,8 @@ public class Storage implements IStorage {
         Path dataPath = storageDataPath.resolve("index_" + entityName + "_" + entityField + ".data");
         Path metaPath = storageDataPath.resolve("index_" + entityName + "_" + entityField + ".meta");
 
-        try (FileChannel dataFc = FileChannel.open(dataPath, StandardOpenOption.READ, StandardOpenOption.WRITE);
-             FileChannel metaFc = FileChannel.open(metaPath, StandardOpenOption.READ, StandardOpenOption.WRITE);
+        try (FileChannel dataFc = FileChannel.open(dataPath, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+             FileChannel metaFc = FileChannel.open(metaPath, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
         ) {
             IBTree btree = new FileBTree(dataFc, metaFc, B_TREE_DEGREE);
             return callback.call(btree);
