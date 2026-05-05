@@ -4,6 +4,7 @@ import ru.otus.btree.domain.IStorage;
 import ru.otus.btree.domain.IStorageEntityInfo;
 import ru.otus.btree.domain.IStorageIndexInfo;
 import ru.otus.btree.lib.api.array.IArray;
+import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.IBTree;
 import ru.otus.btree.lib.api.btree.IEntity;
 import ru.otus.btree.lib.api.storage.Result;
@@ -104,6 +105,26 @@ public class Storage implements IStorage {
                 return null;
             });
         });
+    }
+
+    @Override
+    public IArray<Result> findByIndex(String entityName, Element element) {
+        Objects.requireNonNull(entityName, "entityName is null");
+        Objects.requireNonNull(element, "element is null");
+        withStorage(entityName, (storage) -> {
+            return withBTree(entityName, element.getName(), (btree) -> {
+                IArray<Element> searchResult = btree.search(element);
+                if (searchResult == null) {
+                    return null;
+                }
+                IArray<Result> result = new SingleArray<>(0);
+                for (int i = 0; i < searchResult.size(); i++) {
+                    result.set(result.size(), storage.get((int) element.getPosition()));
+                }
+                return result;
+            });
+        });
+        return null;
     }
 
     @Override
