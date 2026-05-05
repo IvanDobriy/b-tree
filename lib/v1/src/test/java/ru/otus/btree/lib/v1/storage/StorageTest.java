@@ -63,8 +63,7 @@ public class StorageTest {
         storage.insert(entities);
         assertEquals(1, storage.size());
 
-        Element search = new Element("search", EType.STRING, "", 0L);
-        Result result = storage.get(search);
+        Result result = storage.get(0);
 
         assertNotNull(result);
         assertNotNull(result.getData());
@@ -120,8 +119,7 @@ public class StorageTest {
     public void testGetNotFound() {
         Storage storage = new Storage(dataChannel, metaChannel);
 
-        Element search = new Element("search", EType.INTEGER, 0, 100L);
-        Result result = storage.get(search);
+        Result result = storage.get(100);
 
         assertNull(result);
     }

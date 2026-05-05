@@ -23,9 +23,8 @@ public class Storage implements IStorage {
     }
 
     @Override
-    public Result get(Element element) {
-        Objects.requireNonNull(element, "element is null");
-        int id = (int) element.getPosition();
+    public Result get(int position) {
+        int id = position;
         StorageManagerEntity managerEntity = storageManager.getEntityById(id);
         if (managerEntity == null) {
             return null;
