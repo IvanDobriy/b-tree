@@ -4,7 +4,6 @@ import ru.otus.btree.domain.IStorage;
 import ru.otus.btree.domain.IStorageEntityInfo;
 import ru.otus.btree.domain.IStorageIndexInfo;
 import ru.otus.btree.lib.api.array.IArray;
-import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.IBTree;
 import ru.otus.btree.lib.api.btree.IEntity;
 import ru.otus.btree.lib.api.storage.Result;
@@ -17,8 +16,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class Storage implements IStorage {
     private final static int B_TREE_DEGREE = 1024;
@@ -94,6 +91,18 @@ public class Storage implements IStorage {
     @Override
     public void createIndex(String entityName, String fieldName) {
         Objects.requireNonNull(entityName, fieldName);
+        withStorage(entityName, (storage) -> {
+            return withBTree(entityName, fieldName, (btree) -> {
+                for (int i = 0; i < storage.size(); i++) {
+                    Result result = storage.get(i);
+                    IEntity data = result.getData();
+                    if (data != null) {
+                        btree.insert(fieldName, result.getData());
+                    }
+                }
+                return null;
+            });
+        });
     }
 
     @Override
