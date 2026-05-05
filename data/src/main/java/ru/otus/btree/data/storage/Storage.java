@@ -17,6 +17,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Storage implements IStorage {
     private final static int B_TREE_DEGREE = 1024;
@@ -129,12 +131,15 @@ public class Storage implements IStorage {
             for (int i = 0; i < list.getSize(); i++) {
                 r.add(r.size(), list.getEntity(i).getName());
             }
+            return r;
         });
         return result;
     }
 
     @Override
     public IStorageEntityInfo getEntityInfo(String name) {
-        return null;
+        return withStorage(name, (storage) -> {
+            return new StorageEntityInfo(name, storage.size(), storage.fileSize());
+        });
     }
 }
