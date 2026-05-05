@@ -7,6 +7,7 @@ import ru.otus.btree.lib.api.array.IArray;
 import ru.otus.btree.lib.api.btree.Element;
 import ru.otus.btree.lib.api.btree.IBTree;
 import ru.otus.btree.lib.api.btree.IEntity;
+import ru.otus.btree.lib.api.storage.Result;
 import ru.otus.btree.lib.v1.array.SingleArray;
 import ru.otus.btree.lib.v1.btree.FileBTree;
 
@@ -100,17 +101,26 @@ public class Storage implements IStorage {
 
     @Override
     public void createEntityStorage(String name) {
-
+        withStorage(name, (storage) -> {
+            return null;
+        });
     }
 
     @Override
-    public void setEntity(IEntity entity, String name) {
-
+    public void setEntity(String name, IEntity entity) {
+        withStorage(name, (storage) -> {
+            storage.insert(new SingleArray<>(new IEntity[]{entity}));
+            return null;
+        });
     }
 
     @Override
-    public IArray<IEntity> getEntity(Element element) {
-        return null;
+    public IEntity getEntity(String name, int position) {
+        throw new RuntimeException("not yet implemented");
+//        Result result =  withStorage(name, (storage)->{
+//            return storage.get(element);
+//        });
+//        return result.getData()
     }
 
     @Override
