@@ -5,9 +5,9 @@ package ru.otus.btree.data.storage;
  * Used for serialization and deserialization of storage entity information.
  */
 public class StorageEntity {
-    // Size of fixed serialized part: int (4) + boolean (1) = 5 bytes
+    // Size of serialized record: int (4) + boolean (1) + char[64] (128) = 133 bytes
+    public static final int RECORD_SIZE = 133;
     public static final int MAX_NAME_LENGTH = 64;
-    public static final int RECORD_SIZE = 5 + MAX_NAME_LENGTH;
 
     private int id;
     private boolean isUsed;
@@ -65,7 +65,11 @@ public class StorageEntity {
 
             dos.writeInt(entity.id);
             dos.writeBoolean(entity.isUsed);
-            dos.writeUTF(entity.name != null ? entity.name : "");
+
+            String name = entity.name != null ? entity.name : "";
+            for (int i = 0; i < MAX_NAME_LENGTH; i++) {
+                dos.writeChar(i < name.length() ? name.charAt(i) : '\0');
+            }
 
             dos.flush();
             return baos.toByteArray();
@@ -91,7 +95,16 @@ public class StorageEntity {
             StorageEntity entity = new StorageEntity();
             entity.id = dis.readInt();
             entity.isUsed = dis.readBoolean();
-            entity.name = dis.readUTF();
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < MAX_NAME_LENGTH; i++) {
+                char c = dis.readChar();
+                if (c == '\0') {
+                    break;
+                }
+                sb.append(c);
+            }
+            entity.name = sb.length() > 0 ? sb.toString() : null;
 
             return entity;
         } catch (java.io.IOException e) {

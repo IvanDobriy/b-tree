@@ -49,7 +49,7 @@ public class StorageEntityTest {
         assertNotNull(deserialized);
         assertEquals(2, deserialized.getId());
         assertFalse(deserialized.isUsed());
-        assertEquals("", deserialized.getName());
+        assertNull(deserialized.getName());
     }
 
     @Test
@@ -63,12 +63,13 @@ public class StorageEntityTest {
 
         for (StorageEntity original : entities) {
             byte[] serialized = StorageEntity.serialize(original);
+            assertEquals(StorageEntity.RECORD_SIZE, serialized.length);
             StorageEntity deserialized = StorageEntity.deserialize(serialized);
 
             assertNotNull(deserialized);
             assertEquals(original.getId(), deserialized.getId());
             assertEquals(original.isUsed(), deserialized.isUsed());
-            assertEquals(original.getName() != null ? original.getName() : "", deserialized.getName());
+            assertEquals(original.getName(), deserialized.getName());
         }
     }
 
@@ -116,8 +117,13 @@ public class StorageEntityTest {
     }
 
     @Test
-    public void testConstructorTruncatesLongName() {
+    public void testConstructorRejectsLongName() {
         String longName = "b".repeat(StorageEntity.MAX_NAME_LENGTH + 5);
         assertThrows(IllegalArgumentException.class, () -> new StorageEntity(1, false, longName));
+    }
+
+    @Test
+    public void testRecordSize() {
+        assertEquals(133, StorageEntity.RECORD_SIZE);
     }
 }
