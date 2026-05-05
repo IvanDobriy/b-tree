@@ -53,7 +53,7 @@ public class Storage implements IStorage {
     private <R> R withStorageEntityList(Callback<StorageEntityList, R> callback) {
         try (FileChannel fc = FileChannel.open(storageMetaEntitiyListPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
             StorageEntityList storageEntityList = new StorageEntityList(fc);
-            callback.call(storageEntityList);
+            return callback.call(storageEntityList);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
