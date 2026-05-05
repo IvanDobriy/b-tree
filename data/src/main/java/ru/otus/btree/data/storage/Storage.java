@@ -116,11 +116,10 @@ public class Storage implements IStorage {
 
     @Override
     public IEntity getEntity(String name, int position) {
-        throw new RuntimeException("not yet implemented");
-//        Result result =  withStorage(name, (storage)->{
-//            return storage.get(element);
-//        });
-//        return result.getData()
+        Result result =  withStorage(name, (storage)->{
+            return storage.get(position);
+        });
+        return result.getData();
     }
 
     @Override
