@@ -3,7 +3,7 @@ package ru.otus.btree.lib.api.btree;
 
 import ru.otus.btree.lib.api.array.IArray;
 
-public interface IBTree<V> {
+public interface IBTree {
     void insert(String keyName, IEntity entity);
 
     IArray<Element> search(Element element);

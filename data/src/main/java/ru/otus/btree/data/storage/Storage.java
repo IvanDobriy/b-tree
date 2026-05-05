@@ -5,15 +5,92 @@ import ru.otus.btree.domain.IStorageEntityInfo;
 import ru.otus.btree.domain.IStorageIndexInfo;
 import ru.otus.btree.lib.api.array.IArray;
 import ru.otus.btree.lib.api.btree.Element;
+import ru.otus.btree.lib.api.btree.IBTree;
 import ru.otus.btree.lib.api.btree.IEntity;
 import ru.otus.btree.lib.v1.array.SingleArray;
+import ru.otus.btree.lib.v1.btree.FileBTree;
+
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Objects;
 
 public class Storage implements IStorage {
-    private StorageEntityList storageEntityList;
+    private final static int B_TREE_DEGREE = 1024;
+    private final Path path;
+    private Path storageMetaEntitiyListPath;
+    private Path storageDataPath;
+
+    private interface Callback<V, R> {
+        R call(V value);
+    }
+
+    public Storage(Path path) {
+        this.path = Objects.requireNonNull(path, "path is null");
+        try {
+            Path storagePath = path.resolve("./storage");
+            if (!Files.exists(storagePath)) {
+                Files.createDirectories(path);
+            }
+            storageMetaEntitiyListPath = storagePath.resolve("./meta/storageList");
+            if (!Files.exists(storageMetaEntitiyListPath)) {
+                Files.createFile(storageMetaEntitiyListPath);
+            }
+            withStorageEntityList((StorageEntityList list) -> {
+                return null;
+            });
+            storageDataPath = storagePath.resolve("./data");
+            if (!Files.exists(storageDataPath)) {
+                Files.createDirectories(storageDataPath);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private <R> R withStorageEntityList(Callback<StorageEntityList, R> callback) {
+        try (FileChannel fc = FileChannel.open(storageMetaEntitiyListPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+            StorageEntityList storageEntityList = new StorageEntityList(fc);
+            callback.call(storageEntityList);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private <R> R withStorage(String name, Callback<ru.otus.btree.lib.api.storage.IStorage, R> callback) {
+        Path dataPath = storageDataPath.resolve(name + ".data");
+        Path metaPath = storageDataPath.resolve(name + ".meta");
+
+        try (FileChannel dataFc = FileChannel.open(dataPath, StandardOpenOption.READ, StandardOpenOption.WRITE);
+             FileChannel metaFc = FileChannel.open(metaPath, StandardOpenOption.READ, StandardOpenOption.WRITE);
+        ) {
+            ru.otus.btree.lib.v1.storage.Storage storage = new ru.otus.btree.lib.v1.storage.Storage(dataFc, metaFc);
+            return callback.call(storage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private <R> R withBTree(String entityName, String entityField, Callback<IBTree, R> callback) {
+        Path dataPath = storageDataPath.resolve("index_" + entityName + "_" + entityField + ".data");
+        Path metaPath = storageDataPath.resolve("index_" + entityName + "_" + entityField + ".meta");
+
+        try (FileChannel dataFc = FileChannel.open(dataPath, StandardOpenOption.READ, StandardOpenOption.WRITE);
+             FileChannel metaFc = FileChannel.open(metaPath, StandardOpenOption.READ, StandardOpenOption.WRITE);
+        ) {
+            IBTree btree = new FileBTree(dataFc, metaFc, B_TREE_DEGREE);
+            return callback.call(btree);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     @Override
     public void createIndex(String entityName, String fieldName) {
-        // empty implementation
+        Objects.requireNonNull(entityName, fieldName);
     }
 
     @Override
