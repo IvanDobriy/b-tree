@@ -5,20 +5,23 @@ package ru.otus.btree.data.storage;
  * Used for serialization and deserialization of storage entity information.
  */
 public class StorageEntity {
-    // Size of serialized record: int (4) + long (8) + boolean (1) = 13 bytes
+    // Size of fixed serialized part: int (4) + long (8) + boolean (1) = 13 bytes
     public static final int RECORD_SIZE = 13;
+    public static final int MAX_NAME_LENGTH = 64;
 
     private int id;
     private long hashName;
     private boolean isUsed;
+    private String name;
 
     public StorageEntity() {
     }
 
-    public StorageEntity(int id, long hashName, boolean isUsed) {
+    public StorageEntity(int id, long hashName, boolean isUsed, String name) {
         this.id = id;
         this.hashName = hashName;
         this.isUsed = isUsed;
+        setName(name);
     }
 
     public int getId() {
@@ -45,6 +48,17 @@ public class StorageEntity {
         isUsed = used;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        if (name != null && name.length() > MAX_NAME_LENGTH) {
+            throw new IllegalArgumentException("Name must not exceed " + MAX_NAME_LENGTH + " characters");
+        }
+        this.name = name;
+    }
+
     /**
      * Serializes a StorageEntity to a byte array.
      *
@@ -62,6 +76,7 @@ public class StorageEntity {
             dos.writeInt(entity.id);
             dos.writeLong(entity.hashName);
             dos.writeBoolean(entity.isUsed);
+            dos.writeUTF(entity.name != null ? entity.name : "");
 
             dos.flush();
             return baos.toByteArray();
@@ -88,6 +103,7 @@ public class StorageEntity {
             entity.id = dis.readInt();
             entity.hashName = dis.readLong();
             entity.isUsed = dis.readBoolean();
+            entity.name = dis.readUTF();
 
             return entity;
         } catch (java.io.IOException e) {
