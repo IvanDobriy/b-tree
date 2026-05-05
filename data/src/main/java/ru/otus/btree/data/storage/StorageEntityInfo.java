@@ -1,4 +1,4 @@
-package ru.otus.btree.data;
+package ru.otus.btree.data.storage;
 
 import ru.otus.btree.domain.IStorageEntityInfo;
 
