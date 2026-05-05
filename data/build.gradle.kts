@@ -8,7 +8,7 @@ repositories {
 }
 
 dependencies {
-    api(project(":domain"))
+    implementation(project(":domain"))
     implementation(project(":lib:api"))
     implementation(project(":lib:v1"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
