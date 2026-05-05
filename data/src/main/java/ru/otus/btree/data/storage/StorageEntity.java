@@ -1,0 +1,97 @@
+package ru.otus.btree.data.storage;
+
+/**
+ * Entity class for storing Storage state.
+ * Used for serialization and deserialization of storage entity information.
+ */
+public class StorageEntity {
+    // Size of serialized record: int (4) + long (8) + boolean (1) = 13 bytes
+    public static final int RECORD_SIZE = 13;
+
+    private int id;
+    private long hashName;
+    private boolean isUsed;
+
+    public StorageEntity() {
+    }
+
+    public StorageEntity(int id, long hashName, boolean isUsed) {
+        this.id = id;
+        this.hashName = hashName;
+        this.isUsed = isUsed;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public long getHashName() {
+        return hashName;
+    }
+
+    public void setHashName(long hashName) {
+        this.hashName = hashName;
+    }
+
+    public boolean isUsed() {
+        return isUsed;
+    }
+
+    public void setUsed(boolean used) {
+        isUsed = used;
+    }
+
+    /**
+     * Serializes a StorageEntity to a byte array.
+     *
+     * @param entity the entity to serialize
+     * @return byte array containing serialized data
+     */
+    public static byte[] serialize(StorageEntity entity) {
+        if (entity == null) {
+            return new byte[0];
+        }
+
+        try (java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+             java.io.DataOutputStream dos = new java.io.DataOutputStream(baos)) {
+
+            dos.writeInt(entity.id);
+            dos.writeLong(entity.hashName);
+            dos.writeBoolean(entity.isUsed);
+
+            dos.flush();
+            return baos.toByteArray();
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to serialize StorageEntity", e);
+        }
+    }
+
+    /**
+     * Deserializes a byte array to a StorageEntity.
+     *
+     * @param data the byte array to deserialize
+     * @return the deserialized StorageEntity, or null if data is null or empty
+     */
+    public static StorageEntity deserialize(byte[] data) {
+        if (data == null || data.length == 0) {
+            return null;
+        }
+
+        try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(data);
+             java.io.DataInputStream dis = new java.io.DataInputStream(bais)) {
+
+            StorageEntity entity = new StorageEntity();
+            entity.id = dis.readInt();
+            entity.hashName = dis.readLong();
+            entity.isUsed = dis.readBoolean();
+
+            return entity;
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to deserialize StorageEntity", e);
+        }
+    }
+}
