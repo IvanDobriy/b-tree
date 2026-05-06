@@ -16,6 +16,8 @@ public interface IStorage {
 
     void setEntity(String name, IEntity entity);
 
+    void setEntities(String name, IArray<IEntity> entities);
+
     IEntity getEntity(String name, int position);
 
     IArray<String> getEntitiesList();

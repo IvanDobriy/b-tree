@@ -166,6 +166,14 @@ public class Storage implements IStorage {
     }
 
     @Override
+    public void setEntities(String name, IArray<IEntity> entities) {
+        withStorage(name, (storage) -> {
+            storage.insert(entities);
+            return null;
+        });
+    }
+
+    @Override
     public IEntity getEntity(String name, int position) {
         Result result = withStorage(name, (storage) -> {
             return storage.get(position);
