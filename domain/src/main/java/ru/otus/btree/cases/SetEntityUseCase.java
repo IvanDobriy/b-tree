@@ -24,8 +24,8 @@ public class SetEntityUseCase {
         Entity entity = new Entity();
         boolean hasFields = false;
 
-        interaction.write("Enter field name (or !done to finish):");
         while (true) {
+            interaction.write("Enter field name (or !done to finish):");
             String fieldName = interaction.read();
             if (fieldName == null) {
                 interaction.write("Error: input is null. Please try again.");
@@ -52,7 +52,7 @@ public class SetEntityUseCase {
 
             entity.set(new Element(fieldName, type, value));
             hasFields = true;
-            break;
+//            break;
         }
 
         if (!hasFields) {
