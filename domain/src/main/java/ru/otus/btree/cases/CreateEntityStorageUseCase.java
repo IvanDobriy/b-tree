@@ -10,7 +10,14 @@ public class CreateEntityStorageUseCase {
     public CreateEntityStorageUseCase(IStorage storage){
         this.storage = Objects.requireNonNull(storage, "storage is null");
     }
-    void execute(Interaction interaction){
-
+    public void execute(Interaction interaction) {
+        interaction.write("Enter entity storage name:");
+        String name = interaction.read();
+        if (name == null || name.isBlank()) {
+            interaction.write("Error: name cannot be empty");
+            return;
+        }
+        storage.createEntityStorage(name.trim());
+        interaction.write("Entity storage '" + name.trim() + "' created successfully.");
     }
 }
