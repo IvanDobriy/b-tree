@@ -55,6 +55,15 @@ public class Storage implements IStorage {
         }
     }
 
+    private <R> R withStorageIndexList(Callback<StorageIndexList, R> callback) {
+        try (FileChannel fc = FileChannel.open(storageMetaEntitiyListPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+            StorageIndexList storageIndexList = new StorageIndexList(fc);
+            return callback.call(storageIndexList);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private <R> R withStorageEntityList(Callback<StorageEntityList, R> callback) {
         try (FileChannel fc = FileChannel.open(storageMetaEntitiyListPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
             StorageEntityList storageEntityList = new StorageEntityList(fc);
@@ -119,11 +128,20 @@ public class Storage implements IStorage {
                     return null;
                 });
             });
+            withStorageIndexList((storage) -> {
+                StorageIndex index;
+                for (int i = 0; i < storage.getSize(); i++) {
+                    index = storage.getIndex(i);//todo need check is  used
+                    if (index.getEntityName().equals(entityName) && index.getFieldName().equals(fieldName)) {
+                        return null;
+                    }
+                }
+                storage.setIndex(new StorageIndex(storage.getSize(), true, entityName, fieldName));
+                return null;
+            });
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-
     }
 
     @Override
@@ -160,7 +178,25 @@ public class Storage implements IStorage {
     @Override
     public void setEntity(String name, IEntity entity) {
         withStorage(name, (storage) -> {
+            IArray<StorageIndex> storageIndexes = withStorageIndexList((storageIndex) -> {
+                IArray<StorageIndex> indexes = new SingleArray<>(0);
+                StorageIndex index;
+                for (int i = 0; i < storageIndex.getSize(); i++) {
+                    index = storageIndex.getIndex(i);//todo need check is  used
+                    if (index.getEntityName().equals(name)) {
+                        indexes.add(indexes.size(), index);
+                    }
+                }
+                return indexes;
+            });
             storage.insert(new SingleArray<>(new IEntity[]{entity}));
+            StorageIndex storageIndex;
+            for(int i = 0; i < storageIndexes.size(); i++){
+                storageIndex = storageIndexes.get(i);
+//                withBTree(storageIndex.getEntityName(), storageIndex.getFieldName(), (btree)-> {
+////                    btree.
+//                });
+            }
             return null;
         });
     }
