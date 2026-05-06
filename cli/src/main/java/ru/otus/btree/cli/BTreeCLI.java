@@ -11,8 +11,6 @@ public class BTreeCLI {
     private Logger logger = Logger.getLogger(this.getClass().getName());
     private void run(String[] args){
         try {
-
-
             // Create a terminal
             Terminal terminal = TerminalBuilder.builder()
                     .color(true)
