@@ -15,6 +15,7 @@ public class GatewayCommand implements ICommand {
         commandTable.insert("exit", new ExitCommand());
         commandTable.insert("create-storage", new CreateEntityStorageCommand(this, storage));
         commandTable.insert("create-index", new CreateIndexCommand(this, storage));
+        commandTable.insert("find-by-index", new FindByIndexCommand(this, storage));
         commandTable.insert("set-entity", new SetEntityCommand(this, storage));
         commandTable.insert("get-entity", new GetEntityCommand(this, storage));
     }
