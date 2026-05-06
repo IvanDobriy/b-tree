@@ -12,6 +12,7 @@ public class GetHelpUseCase {
         interaction.write("  set-entity     — save an entity to storage");
         interaction.write("  get-entity     — retrieve an entity from storage");
         interaction.write("  find-by-index  — search entities by indexed field");
+        interaction.write("  generate-users — generate random user data");
         interaction.write("  exit           — close the application");
     }
 }

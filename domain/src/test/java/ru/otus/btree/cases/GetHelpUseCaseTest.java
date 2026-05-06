@@ -21,7 +21,7 @@ public class GetHelpUseCaseTest {
         useCase.execute(interaction);
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(interaction, atLeast(8)).write(captor.capture());
+        verify(interaction, atLeast(9)).write(captor.capture());
         List<String> messages = captor.getAllValues();
 
         assertTrue(messages.stream().anyMatch(m -> m.contains("B-Tree CLI")),
@@ -38,6 +38,8 @@ public class GetHelpUseCaseTest {
                 "Expected help to contain 'get-entity' command");
         assertTrue(messages.stream().anyMatch(m -> m.contains("find-by-index")),
                 "Expected help to contain 'find-by-index' command");
+        assertTrue(messages.stream().anyMatch(m -> m.contains("generate-users")),
+                "Expected help to contain 'generate-users' command");
         assertTrue(messages.stream().anyMatch(m -> m.contains("exit")),
                 "Expected help to contain 'exit' command");
     }
