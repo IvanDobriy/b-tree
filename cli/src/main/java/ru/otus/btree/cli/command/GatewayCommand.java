@@ -19,7 +19,7 @@ public class GatewayCommand implements ICommand {
 
     @Override
     public ICommand execute(Interaction interaction) {
-        interaction.write("введите команду:");
+        interaction.write("Enter command:");
         String data = interaction.read();
         ICommand command = commandTable.find(data);
         if(command == null){
