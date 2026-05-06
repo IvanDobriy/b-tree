@@ -23,6 +23,10 @@ public class PageManager {
         this.deletedEntities = collectDeletedEntities();
     }
 
+    public long size() {
+        return pageManagerList.getSize();
+    }
+
     /**
      * Allocates a new page and returns its page ID.
      * First checks for deleted entities to reuse, otherwise creates a new one.

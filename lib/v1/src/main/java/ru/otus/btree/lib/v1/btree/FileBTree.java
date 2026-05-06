@@ -30,8 +30,10 @@ public class FileBTree implements IBTree {
     }
 
     @Override
-    public void insert(String keyName, IEntity entity) {
-        root.insertByKey(entity.get(keyName));
+    public void insert(String keyName, IEntity entity, long entityPosition) {
+        Element element = entity.get(keyName);
+        Element newElement = new Element(element.getName(), element.getType(), element.getValue(), entityPosition);
+        root.insertByKey(newElement);
     }
 
     @Override
@@ -49,7 +51,7 @@ public class FileBTree implements IBTree {
     }
 
     public FileBTreeNode getRoot() {
-        if (pageManager.getPageSize() != 0) {//todo need fix, need add real check root existing
+        if (pageManager.size() == 0) {//todo need fix, need add real check root existing
             long pageId = pageManager.allocatePage();
             FileBTreeNode newRoot = new FileBTreeNode(pageId, degree, false, nodeChannel, pageManager, onRootChanged);
             FileBTreeNode.saveNode(newRoot, nodeChannel);

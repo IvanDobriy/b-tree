@@ -87,7 +87,7 @@ public class Storage implements IStorage {
         ) {
             IBTree btree = new FileBTree(dataFc, metaFc, B_TREE_DEGREE);
             return callback.call(btree);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -103,7 +103,7 @@ public class Storage implements IStorage {
                     Result result = storage.get(i);
                     IEntity data = result.getData();
                     if (data != null) {
-                        btree.insert(fieldName, result.getData());
+                        btree.insert(fieldName, result.getData(), result.getPosition());
                     }
                 }
                 return null;
@@ -115,7 +115,7 @@ public class Storage implements IStorage {
     public IArray<Result> findByIndex(String entityName, Element element) {
         Objects.requireNonNull(entityName, "entityName is null");
         Objects.requireNonNull(element, "element is null");
-        withStorage(entityName, (storage) -> {
+        return withStorage(entityName, (storage) -> {
             return withBTree(entityName, element.getName(), (btree) -> {
                 IArray<Element> searchResult = btree.search(element);
                 if (searchResult == null) {
@@ -123,12 +123,11 @@ public class Storage implements IStorage {
                 }
                 IArray<Result> result = new SingleArray<>(0);
                 for (int i = 0; i < searchResult.size(); i++) {
-                    result.set(result.size(), storage.get((int) element.getPosition()));
+                    result.add(result.size(), storage.get((int) searchResult.get(i).getPosition()));
                 }
                 return result;
             });
         });
-        return null;
     }
 
     @Override

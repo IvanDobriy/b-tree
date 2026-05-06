@@ -33,7 +33,7 @@ public class FileBTreeTest {
             Element key = new Element("key", EType.STRING, "value");
             bTree.insert("key", new ru.otus.btree.lib.v1.btree.Entity() {{
                 set(key);
-            }});
+            }}, 0);
 
             assertNotNull(bTree.search(key));
         }
@@ -56,13 +56,13 @@ public class FileBTreeTest {
 
             bTree.insert("key", new ru.otus.btree.lib.v1.btree.Entity() {{
                 set(keyA);
-            }});
+            }}, 0);
             bTree.insert("key", new ru.otus.btree.lib.v1.btree.Entity() {{
                 set(keyB);
-            }});
+            }}, 1);
             bTree.insert("key", new ru.otus.btree.lib.v1.btree.Entity() {{
                 set(keyC);
-            }});
+            }}, 2);
 
             assertNotNull(bTree.search(keyB));
             bTree.delete(keyB);
@@ -88,7 +88,7 @@ public class FileBTreeTest {
                 final int value = i;
                 bTree.insert("key", new ru.otus.btree.lib.v1.btree.Entity() {{
                     set(new Element("key", EType.INTEGER, value));
-                }});
+                }}, i);
             }
 
             // Delete 200 elements (even numbers from 0 to 398)
