@@ -117,20 +117,18 @@ public class StorageIndex {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < MAX_NAME_LENGTH; i++) {
                 char c = dis.readChar();
-                if (c == '\0') {
-                    break;
+                if (c != '\0') {
+                    sb.append(c);
                 }
-                sb.append(c);
             }
             index.entityName = sb.length() > 0 ? sb.toString() : null;
 
             sb = new StringBuilder();
             for (int i = 0; i < MAX_NAME_LENGTH; i++) {
                 char c = dis.readChar();
-                if (c == '\0') {
-                    break;
+                if (c != '\0') {
+                    sb.append(c);
                 }
-                sb.append(c);
             }
             index.fieldName = sb.length() > 0 ? sb.toString() : null;
 
