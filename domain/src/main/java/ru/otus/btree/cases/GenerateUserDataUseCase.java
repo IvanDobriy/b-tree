@@ -2,8 +2,11 @@ package ru.otus.btree.cases;
 
 import ru.otus.btree.command.Interaction;
 import ru.otus.btree.domain.IStorage;
+import ru.otus.btree.lib.api.array.IArray;
 import ru.otus.btree.lib.api.btree.EType;
 import ru.otus.btree.lib.api.btree.Element;
+import ru.otus.btree.lib.api.btree.IEntity;
+import ru.otus.btree.lib.v1.array.SingleArray;
 import ru.otus.btree.lib.v1.btree.Entity;
 
 import java.util.Objects;
@@ -44,6 +47,7 @@ public class GenerateUserDataUseCase {
             return;
         }
 
+        IArray<IEntity> entities = new SingleArray<>(0);
         for (int i = 0; i < count; i++) {
             Entity entity = new Entity();
             entity.set(new Element("id", EType.INTEGER, i + 1));
@@ -51,8 +55,9 @@ public class GenerateUserDataUseCase {
             entity.set(new Element("sName", EType.STRING, randomSurname()));
             entity.set(new Element("age", EType.INTEGER, randomAge()));
             entity.set(new Element("profession", EType.STRING, randomProfession()));
-            storage.setEntity(storageName, entity);
+            entities.add(entities.size(), entity);
         }
+        storage.setEntities(storageName, entities);
 
         interaction.write("Generated and saved " + count + " user(s) to storage '" + storageName + "'.");
     }

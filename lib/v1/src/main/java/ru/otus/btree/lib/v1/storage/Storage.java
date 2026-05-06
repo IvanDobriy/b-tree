@@ -33,7 +33,7 @@ public class Storage implements IStorage {
         if (data == null) {
             return null;
         }
-        return new Result(data, managerEntity.getPosition());
+        return new Result(data, managerEntity.getId());
     }
 
     @Override
