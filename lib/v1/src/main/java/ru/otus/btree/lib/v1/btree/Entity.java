@@ -32,7 +32,7 @@ public class Entity implements IEntity {
 
     @Override
     public IArray<Element> toArray() {
-        return null;
+        return elements();
     }
 
     public int size() {
