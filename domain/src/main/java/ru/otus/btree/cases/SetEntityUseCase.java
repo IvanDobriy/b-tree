@@ -52,6 +52,7 @@ public class SetEntityUseCase {
 
             entity.set(new Element(fieldName, type, value));
             hasFields = true;
+            break;
         }
 
         if (!hasFields) {
