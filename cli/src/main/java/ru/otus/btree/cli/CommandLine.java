@@ -7,7 +7,7 @@ import org.jline.terminal.TerminalBuilder;
 
 import java.util.logging.Logger;
 
-public class CommandLine {
+public class CommandLine implements ICommandLine {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
     private Terminal terminal;
     private LineReader reader;
@@ -28,10 +28,13 @@ public class CommandLine {
         }
     }
 
-    String readLine(){
+    @Override
+    public String readLine() {
         return reader.readLine();
     }
-    void writeMsg(String msg){
+
+    @Override
+    public void writeMsg(String msg) {
         System.out.println(msg);
     }
 }

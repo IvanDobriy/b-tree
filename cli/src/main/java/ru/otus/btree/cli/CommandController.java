@@ -6,12 +6,12 @@ import ru.otus.btree.cli.command.ICommand;
 import ru.otus.btree.command.Interaction;
 
 public class CommandController {
-    private final CommandLine commandLine;
+    private final ICommandLine commandLine;
     private ICommand currentCommand;
     private final Interaction interaction;
 
     CommandController(){
-        this.commandLine = new CommandLine();
+        this.commandLine = CommandLineFactory.newCommandLine();
         this.currentCommand = new GreetingCommand(new GatewayCommand());
         interaction = new CliInteraction();
     }
