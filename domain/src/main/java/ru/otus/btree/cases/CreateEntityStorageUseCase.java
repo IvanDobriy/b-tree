@@ -27,8 +27,12 @@ public class CreateEntityStorageUseCase {
                 interaction.write("Error: name cannot be empty. Please try again or enter !stop.");
                 continue;
             }
-            storage.createEntityStorage(name);
-            interaction.write("Entity storage '" + name + "' created successfully.");
+            try {
+                storage.createEntityStorage(name);
+                interaction.write("Entity storage '" + name + "' created successfully.");
+            } catch (Exception e) {
+                interaction.write("Error: failed to create storage '" + name + "': " + e.getMessage());
+            }
             return;
         }
     }

@@ -23,8 +23,12 @@ public class CreateIndexUseCase {
             return;
         }
 
-        storage.createIndex(entityName, fieldName);
-        interaction.write("Index on field '" + fieldName + "' created successfully for storage '" + entityName + "'.");
+        try {
+            storage.createIndex(entityName, fieldName);
+            interaction.write("Index on field '" + fieldName + "' created successfully for storage '" + entityName + "'.");
+        } catch (Exception e) {
+            interaction.write("Error: failed to create index on field '" + fieldName + "' for storage '" + entityName + "': " + e.getMessage());
+        }
     }
 
     private String readEntityName(Interaction interaction) {

@@ -60,8 +60,12 @@ public class SetEntityUseCase {
             return;
         }
 
-        storage.setEntity(storageName, entity);
-        interaction.write("Entity saved successfully to storage '" + storageName + "'.");
+        try {
+            storage.setEntity(storageName, entity);
+            interaction.write("Entity saved successfully to storage '" + storageName + "'.");
+        } catch (Exception e) {
+            interaction.write("Error: failed to save entity to storage '" + storageName + "': " + e.getMessage());
+        }
     }
 
     private String readStorageName(Interaction interaction) {

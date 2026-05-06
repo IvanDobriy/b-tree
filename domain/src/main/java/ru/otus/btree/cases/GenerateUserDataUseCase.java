@@ -57,9 +57,12 @@ public class GenerateUserDataUseCase {
             entity.set(new Element("profession", EType.STRING, randomProfession()));
             entities.add(entities.size(), entity);
         }
-        storage.setEntities(storageName, entities);
-
-        interaction.write("Generated and saved " + count + " user(s) to storage '" + storageName + "'.");
+        try {
+            storage.setEntities(storageName, entities);
+            interaction.write("Generated and saved " + count + " user(s) to storage '" + storageName + "'.");
+        } catch (Exception e) {
+            interaction.write("Error: failed to save generated users to storage '" + storageName + "': " + e.getMessage());
+        }
     }
 
     private String readStorageName(Interaction interaction) {

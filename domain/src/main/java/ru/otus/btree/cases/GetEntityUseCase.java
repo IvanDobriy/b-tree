@@ -26,7 +26,13 @@ public class GetEntityUseCase {
             return;
         }
 
-        IEntity entity = storage.getEntity(storageName, position);
+        IEntity entity;
+        try {
+            entity = storage.getEntity(storageName, position);
+        } catch (Exception e) {
+            interaction.write("Error: failed to get entity from storage '" + storageName + "': " + e.getMessage());
+            return;
+        }
         if (entity == null) {
             interaction.write("Error: entity not found at position " + position + " in storage '" + storageName + "'.");
             return;

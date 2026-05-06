@@ -39,7 +39,13 @@ public class FindByIndexUseCase {
         }
 
         Element element = new Element(fieldName, type, value);
-        IArray<Result> results = storage.findByIndex(entityName, element);
+        IArray<Result> results;
+        try {
+            results = storage.findByIndex(entityName, element);
+        } catch (Exception e) {
+            interaction.write("Error: failed to search by index in storage '" + entityName + "': " + e.getMessage());
+            return;
+        }
 
         if (results == null || results.size() == 0) {
             interaction.write("No results found.");
