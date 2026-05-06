@@ -4,15 +4,21 @@ import ru.otus.btree.cli.command.GatewayCommand;
 import ru.otus.btree.cli.command.GreetingCommand;
 import ru.otus.btree.cli.command.ICommand;
 import ru.otus.btree.command.Interaction;
+import ru.otus.btree.data.storage.Storage;
+import ru.otus.btree.domain.IStorage;
+
+import java.nio.file.Path;
 
 public class CommandController {
     private final ICommandLine commandLine;
     private ICommand currentCommand;
     private final Interaction interaction;
+    private final IStorage storage;
 
     CommandController(){
         this.commandLine = CommandLineFactory.newCommandLine();
-        this.currentCommand = new GreetingCommand(new GatewayCommand());
+        this.storage = new Storage(Path.of("."));
+        this.currentCommand = new GreetingCommand(new GatewayCommand(storage));
         interaction = new CliInteraction();
     }
     private class CliInteraction implements Interaction {

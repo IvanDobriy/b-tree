@@ -1,6 +1,7 @@
 package ru.otus.btree.cli.command;
 
 import ru.otus.btree.command.Interaction;
+import ru.otus.btree.domain.IStorage;
 import ru.otus.btree.lib.api.hash.IHashTable;
 import ru.otus.btree.lib.v1.btree.StringHasher;
 import ru.otus.btree.lib.v1.hash.OpenAddressHashTable;
@@ -8,10 +9,12 @@ import ru.otus.btree.lib.v1.hash.OpenAddressHashTable;
 public class GatewayCommand implements ICommand {
     private IHashTable<String, ICommand> commandTable;
 
-    public GatewayCommand() {
+    public GatewayCommand(IStorage storage) {
         commandTable = new OpenAddressHashTable<>(new StringHasher(), 10, 1);
         commandTable.insert("help", new HelpCommand(this));
         commandTable.insert("exit", new ExitCommand());
+        commandTable.insert("create-storage", new CreateEntityStorageCommand(this, storage));
+        commandTable.insert("get", new GetEntityCommand(this, storage));
     }
 
     @Override
