@@ -97,18 +97,33 @@ public class Storage implements IStorage {
     public void createIndex(String entityName, String fieldName) {
         Objects.requireNonNull(entityName, "entityName is null");
         Objects.requireNonNull(fieldName, "fieldName is null");
-        withStorage(entityName, (storage) -> {
-            return withBTree(entityName, fieldName, (btree) -> {
-                for (int i = 0; i < storage.size(); i++) {
-                    Result result = storage.get(i);
-                    IEntity data = result.getData();
-                    if (data != null) {
-                        btree.insert(fieldName, result.getData(), result.getPosition());
+
+        try {
+            Path dataPath = storageDataPath.resolve("index_" + entityName + "_" + fieldName + ".data");
+            Path metaPath = storageDataPath.resolve("index_" + entityName + "_" + fieldName + ".meta");
+            if (Files.exists(dataPath)) {
+                Files.delete(dataPath);
+            }
+            if (Files.exists(metaPath)) {
+                Files.delete(metaPath);
+            }
+            withStorage(entityName, (storage) -> {
+                return withBTree(entityName, fieldName, (btree) -> {
+                    for (int i = 0; i < storage.size(); i++) {
+                        Result result = storage.get(i);
+                        IEntity data = result.getData();
+                        if (data != null) {
+                            btree.insert(fieldName, result.getData(), result.getPosition());
+                        }
                     }
-                }
-                return null;
+                    return null;
+                });
             });
-        });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
     @Override
