@@ -192,6 +192,9 @@ public class Storage implements IStorage {
             IArray<Long> positions = storage.insert(new SingleArray<>(new IEntity[]{entity}));
             for (int i = 0; i < storageIndexes.size(); i++) {
                 StorageIndex storageIndex = storageIndexes.get(i);
+                if (entity.get(storageIndex.getFieldName()) == null) {
+                    continue;
+                }
                 withBTree(storageIndex.getEntityName(), storageIndex.getFieldName(), (btree) -> {
                     btree.insert(storageIndex.getFieldName(), entity, positions.get(0));
                     return null;
