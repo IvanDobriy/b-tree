@@ -189,13 +189,13 @@ public class Storage implements IStorage {
                 }
                 return indexes;
             });
-            storage.insert(new SingleArray<>(new IEntity[]{entity}));
-            StorageIndex storageIndex;
-            for(int i = 0; i < storageIndexes.size(); i++){
-                storageIndex = storageIndexes.get(i);
-//                withBTree(storageIndex.getEntityName(), storageIndex.getFieldName(), (btree)-> {
-////                    btree.
-//                });
+            IArray<Long> positions = storage.insert(new SingleArray<>(new IEntity[]{entity}));
+            for (int i = 0; i < storageIndexes.size(); i++) {
+                StorageIndex storageIndex = storageIndexes.get(i);
+                withBTree(storageIndex.getEntityName(), storageIndex.getFieldName(), (btree) -> {
+                    btree.insert(storageIndex.getFieldName(), entity, positions.get(0));
+                    return null;
+                });
             }
             return null;
         });

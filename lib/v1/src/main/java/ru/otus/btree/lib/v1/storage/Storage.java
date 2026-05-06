@@ -54,8 +54,9 @@ public class Storage implements IStorage {
     }
 
     @Override
-    public void insert(IArray<IEntity> entity) {
+    public IArray<Long> insert(IArray<IEntity> entity) {
         Objects.requireNonNull(entity, "entity array is null");
+        IArray<Long> ids = new SingleArray<>(0);
         for (int i = 0; i < entity.size(); i++) {
             IEntity item = entity.get(i);
             if (item == null) {
@@ -63,9 +64,12 @@ public class Storage implements IStorage {
             }
             byte[] data = FileBTreeUtils.serializeEntity(item);
             int entitySize = data.length;
+            long id = storageManager.size();
             long position = storageManager.allocatePosition(entitySize);
             rawStorage.set(position, item);
+            ids.add(ids.size(), id);
         }
+        return ids;
     }
 
     @Override

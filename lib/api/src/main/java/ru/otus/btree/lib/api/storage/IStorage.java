@@ -10,7 +10,7 @@ public interface IStorage {
 
     IArray<Result> get(long from, long to);
 
-    void insert(IArray<IEntity> entity);
+    IArray<Long> insert(IArray<IEntity> entity);
 
     void remove(Element element);
 
